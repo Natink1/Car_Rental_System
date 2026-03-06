@@ -8,7 +8,7 @@
   --secondary: #0ea5e9;
   --bg: #f8fafc;
   --card-bg: #ffffff;
-  --text: #1e21d4ed893b;
+  --text: #1e293b;
   --text-muted: #64748b;
   --border: #e2e8f0;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
@@ -79,6 +79,15 @@ a:hover {
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+a.btn {
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+button.btn {
+  font-family: inherit;
 }
 
 .container {

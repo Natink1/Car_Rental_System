@@ -192,6 +192,21 @@ class CarController extends Controller
         return response()->json($this->formatCar($car));
     }
 
+    public function reapply(string $id): JsonResponse
+    {
+        $car = Car::find($id);
+        if (! $car || $car->user_id !== auth('api')->id()) {
+            return response()->json(['message' => 'Car not found'], 404);
+        }
+
+        if ($car->status !== 'rejected') {
+            return response()->json(['message' => 'Only rejected listings can be reapplied.'], 422);
+        }
+
+        $car->update(['status' => 'pending']);
+        return response()->json(['message' => 'Listing resubmitted for approval.', 'car' => $car->fresh()]);
+    }
+
     public function destroy(string $id): JsonResponse
     {
         $car = Car::find($id);

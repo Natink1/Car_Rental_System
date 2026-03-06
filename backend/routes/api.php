@@ -34,6 +34,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('cars', [CarController::class, 'store'])->middleware('role:owner');
     Route::put('cars/{id}', [CarController::class, 'update'])->middleware('role:owner');
     Route::post('cars/{id}', [CarController::class, 'update'])->middleware('role:owner');
+    Route::patch('cars/{id}/reapply', [CarController::class, 'reapply'])->middleware('role:owner');
     Route::delete('cars/{id}', [CarController::class, 'destroy'])->middleware('role:owner');
     Route::get('my-cars', [CarController::class, 'myCars'])->middleware('role:owner');
 

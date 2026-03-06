@@ -18,6 +18,7 @@ class AuthController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'in:customer,owner'],
+            'phone' => ['nullable', 'string', 'max:30'],
         ];
 
         if ($request->input('role') === 'owner') {
@@ -33,6 +34,7 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'phone' => $request->input('phone'),
             'password' => Hash::make($request->password),
             'role' => $request->role,
         ]);

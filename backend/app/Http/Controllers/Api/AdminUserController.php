@@ -24,6 +24,7 @@ class AdminUserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'in:customer,owner,admin'],
+            'phone' => ['nullable', 'string', 'max:30'],
         ];
 
         if ($request->input('role') === 'owner') {
@@ -36,11 +37,13 @@ class AdminUserController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $role = $request->role;
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'phone' => $role !== 'admin' ? $request->input('phone') : null,
             'password' => Hash::make($request->password),
-            'role' => $request->role,
+            'role' => $role,
         ]);
 
         if ($request->hasFile('id_image')) {

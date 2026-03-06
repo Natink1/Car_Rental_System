@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { formatDisplayDate } from '../../utils/dateFormat';
 import { getImageUrl } from '../../utils/imageUrl';
 import { ConfirmModal } from '../../components/ConfirmModal';
 
 export function OwnerDashboard() {
+  const navigate = useNavigate();
   const [data, setData] = useState({ cars: [], active_bookings: [], earnings: 0 });
+  const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleteConfirmCarId, setDeleteConfirmCarId] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -15,6 +17,19 @@ export function OwnerDashboard() {
   useEffect(() => {
     api.get('/dashboard/owner').then(({ data: d }) => setData(d)).catch(() => {}).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    api.get('/admins').then(({ data: list }) => setAdmins(Array.isArray(list) ? list : [])).catch(() => setAdmins([]));
+  }, []);
+
+  const startChatWithAdmin = async () => {
+    const admin = admins[0];
+    if (!admin) return;
+    try {
+      const { data: conv } = await api.post('/conversations', { user_id: admin.id });
+      navigate(`/chat?conversation=${conv.id}`);
+    } catch (_) {}
+  };
 
   const statusClass = (s) => {
     if (s === 'pending') return 'badge-pending';
@@ -65,8 +80,17 @@ export function OwnerDashboard() {
         </div>
       </Link>
       {car.can_owner_edit && (
-        <div style={{ padding: '0 1rem 1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <Link to={`/owner/cars/${car.id}/edit`} className="btn btn-secondary" style={{ flex: 1, minWidth: 80 }}>Edit</Link>
+        <div style={{ padding: '0 1rem 1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          {car.status === 'rejected' && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={async () => { try { await api.patch(`/cars/${car.id}/reapply`); refreshData(); } catch (_) {} }}
+            >
+              Reapply listing
+            </button>
+          )}
+          <Link to={`/owner/cars/${car.id}/edit`} className="btn btn-secondary">Edit</Link>
           <button type="button" className="btn btn-secondary" style={{ color: '#dc2626', borderColor: '#dc2626' }} onClick={() => handleDeleteCarClick(car.id)}>Delete</button>
         </div>
       )}
@@ -76,9 +100,12 @@ export function OwnerDashboard() {
   return (
     <div className="container">
       <h1 className="section-title">Owner Dashboard</h1>
-      <div style={{ marginBottom: '1.5rem' }}>
+      <div style={{ marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
         <Link to="/chat" className="btn btn-primary">Open Chat</Link>
-        <Link to="/owner/cars/new" className="btn btn-secondary" style={{ marginLeft: '0.5rem' }}>Add car</Link>
+        {admins[0] && (
+          <button type="button" className="btn btn-secondary" onClick={startChatWithAdmin}>Chat with Admin</button>
+        )}
+        <Link to="/owner/cars/new" className="btn btn-secondary">Add car</Link>
       </div>
 
       {deleteError && (

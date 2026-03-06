@@ -1,16 +1,31 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { formatDisplayDate } from '../../utils/dateFormat';
 import { getImageUrl } from '../../utils/imageUrl';
 
 export function CustomerDashboard() {
+  const navigate = useNavigate();
   const [data, setData] = useState({ active_bookings: [], booking_history: [] });
+  const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api.get('/dashboard/customer').then(({ data: d }) => setData(d)).catch(() => {}).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    api.get('/admins').then(({ data: list }) => setAdmins(Array.isArray(list) ? list : [])).catch(() => setAdmins([]));
+  }, []);
+
+  const startChatWithAdmin = async () => {
+    const admin = admins[0];
+    if (!admin) return;
+    try {
+      const { data: conv } = await api.post('/conversations', { user_id: admin.id });
+      navigate(`/chat?conversation=${conv.id}`);
+    } catch (_) {}
+  };
 
   const statusClass = (s) => {
     if (s === 'pending') return 'badge-pending';
@@ -27,9 +42,12 @@ export function CustomerDashboard() {
   return (
     <div className="container">
       <h1 className="section-title">Customer Dashboard</h1>
-      <div style={{ marginBottom: '1.5rem' }}>
+      <div style={{ marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
         <Link to="/chat" className="btn btn-primary">Open Chat</Link>
-        <Link to="/bookings" className="btn btn-secondary" style={{ marginLeft: '0.5rem' }}>My Bookings</Link>
+        {admins[0] && (
+          <button type="button" className="btn btn-secondary" onClick={startChatWithAdmin}>Chat with Admin</button>
+        )}
+        <Link to="/bookings" className="btn btn-secondary">My Bookings</Link>
       </div>
 
       <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Active bookings</h2>

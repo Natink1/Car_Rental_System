@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 export function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [role, setRole] = useState('customer');
@@ -25,7 +26,7 @@ export function Register() {
       return;
     }
     try {
-      await register(name, email, password, passwordConfirmation, role, role === 'owner' ? idImage : null);
+      await register(name, email, password, passwordConfirmation, role, role === 'owner' ? idImage : null, phone);
       navigate(role === 'admin' ? '/admin/dashboard' : role === 'owner' ? '/owner/dashboard' : '/customer/dashboard', { replace: true });
     } catch (err) {
       const msg = err.response?.data?.errors
@@ -48,6 +49,10 @@ export function Register() {
           <div className="form-group">
             <label>Email</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </div>
+          <div className="form-group">
+            <label>Phone (optional)</label>
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. +1234567890" />
           </div>
           <div className="form-group">
             <label>Role</label>

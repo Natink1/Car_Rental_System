@@ -135,9 +135,9 @@ export function Chat() {
     <div className="container">
       <h1 className="section-title">Chat</h1>
       <div className="chat-layout">
-        <div className="card" style={{ overflow: 'hidden', minWidth: 260 }}>
-          <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--border)', fontWeight: 600 }}>Conversations</div>
-          <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+        <div className="card chat-sidebar">
+          <div className="chat-sidebar-title">Conversations</div>
+          <div className="chat-sidebar-list">
             {conversations.length === 0 && <p style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>No conversations yet. Start one from a car page or add a user.</p>}
             {conversations.map((c) => (
               <button
@@ -165,15 +165,15 @@ export function Chat() {
             ))}
           </div>
         </div>
-        <div className="card chat-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 400 }}>
+        <div className="card chat-main">
           {!selectedId ? (
-            <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Select a conversation or start a new one.</div>
+            <div className="chat-main-placeholder">Select a conversation or start a new one.</div>
           ) : (
             <>
-              <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--border)', fontWeight: 600 }}>
+              <div className="chat-main-header">
                 {selected?.other?.name ?? 'Conversation'}{selected?.other?.role != null && <span className="badge" style={{ marginLeft: '0.5rem', fontSize: '0.7rem', background: 'var(--primary)', color: 'white' }}> {selected.other.role}</span>}
               </div>
-              <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div className="chat-messages-box">
                 {messages.map((m) => (
                   <div
                     key={m.id}
@@ -196,13 +196,12 @@ export function Chat() {
                 ))}
                 <div ref={messagesEndRef} />
               </div>
-              <form onSubmit={sendMessage} style={{ padding: '0.75rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '0.5rem' }}>
+              <form className="chat-form" onSubmit={sendMessage}>
                 <input
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
-                  style={{ flex: 1 }}
                 />
                 <button type="submit" className="btn btn-primary">Send</button>
               </form>
@@ -211,9 +210,76 @@ export function Chat() {
         </div>
       </div>
       <style>{`
-        .chat-layout { display: flex; gap: 1rem; flex-wrap: wrap; }
-        .chat-main { min-width: 300px; }
-        @media (max-width: 700px) { .chat-layout { flex-direction: column; } }
+        .chat-layout {
+          display: flex;
+          gap: 1rem;
+          flex-wrap: nowrap;
+          height: 520px;
+          max-width: 100%;
+        }
+        .chat-sidebar {
+          width: 260px;
+          min-width: 260px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+        .chat-sidebar-title {
+          padding: 0.75rem;
+          border-bottom: 1px solid var(--border);
+          font-weight: 600;
+          flex-shrink: 0;
+        }
+        .chat-sidebar-list {
+          flex: 1;
+          min-height: 0;
+          overflow-y: auto;
+        }
+        .chat-main {
+          flex: 1;
+          min-width: 280px;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+        }
+        .chat-main-placeholder {
+          padding: 2rem;
+          text-align: center;
+          color: var(--text-muted);
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .chat-main-header {
+          padding: 0.75rem;
+          border-bottom: 1px solid var(--border);
+          font-weight: 600;
+          flex-shrink: 0;
+        }
+        .chat-messages-box {
+          height: 340px;
+          overflow-y: auto;
+          padding: 1rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          flex-shrink: 0;
+        }
+        .chat-form {
+          padding: 0.75rem;
+          border-top: 1px solid var(--border);
+          display: flex;
+          gap: 0.5rem;
+          flex-shrink: 0;
+        }
+        .chat-form input { flex: 1; }
+        @media (max-width: 700px) {
+          .chat-layout { flex-direction: column; height: 80vh; max-height: 600px; }
+          .chat-sidebar { width: 100%; min-width: 0; max-height: 180px; }
+          .chat-messages-box { height: 240px; }
+        }
       `}</style>
     </div>
   );

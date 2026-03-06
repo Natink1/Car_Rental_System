@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 import { getImageUrl } from '../../utils/imageUrl';
+import { AdminUsersModal } from '../../components/AdminUsersModal';
 
 export function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [pendingCars, setPendingCars] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [usersModalOpen, setUsersModalOpen] = useState(false);
 
   useEffect(() => {
     api.get('/dashboard/admin').then(({ data }) => setStats(data)).catch(() => {});
@@ -35,10 +37,12 @@ export function AdminDashboard() {
   return (
     <div className="container">
       <h1 className="section-title">Admin Dashboard</h1>
-      <div style={{ marginBottom: '1.5rem' }}>
+      <div style={{ marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
         <Link to="/chat" className="btn btn-primary">Open Chat</Link>
-        <Link to="/admin/users" className="btn btn-secondary" style={{ marginLeft: '0.5rem' }}>Users</Link>
+        <button type="button" className="btn btn-secondary" onClick={() => setUsersModalOpen(true)}>Users</button>
       </div>
+
+      <AdminUsersModal open={usersModalOpen} onClose={() => setUsersModalOpen(false)} />
 
       <div className="grid grid-2 grid-4" style={{ marginBottom: '2rem', gap: '1rem' }}>
         <div className="card" style={{ padding: '1.5rem' }}>

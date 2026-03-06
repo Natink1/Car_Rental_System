@@ -55,7 +55,7 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const register = async (name, email, password, password_confirmation, role, idImageFile = null) => {
+  const register = async (name, email, password, password_confirmation, role, idImageFile = null, phone = '') => {
     let data;
     if (idImageFile) {
       const formData = new FormData();
@@ -65,6 +65,7 @@ export function AuthProvider({ children }) {
       formData.append('password_confirmation', password_confirmation);
       formData.append('role', role || 'customer');
       formData.append('id_image', idImageFile);
+      if (phone) formData.append('phone', phone);
       const res = await api.post('/auth/register', formData);
       data = res.data;
     } else {
@@ -74,6 +75,7 @@ export function AuthProvider({ children }) {
         password,
         password_confirmation,
         role: role || 'customer',
+        ...(phone && { phone }),
       });
       data = res.data;
     }
