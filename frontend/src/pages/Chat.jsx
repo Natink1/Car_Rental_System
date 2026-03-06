@@ -5,8 +5,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { formatDisplayDate } from '../utils/dateFormat';
 import { getEcho } from '../echo';
 
-const POLL_INTERVAL_MS = 4000;
-
 export function Chat() {
   const { user, isAuthenticated } = useAuth();
   const [searchParams] = useSearchParams();
@@ -18,19 +16,40 @@ export function Chat() {
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
   const channelRef = useRef(null);
+  const conversationsFetchedRef = useRef(false);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
+  // Fetch conversations when opening Chat (once per mount; ref avoids refetch on URL change only)
   useEffect(() => {
     if (!isAuthenticated) return;
-    api.get('/conversations').then(({ data }) => {
-      setConversations(Array.isArray(data) ? data : []);
-      if (conversationIdFromUrl && !selectedId) setSelectedId(conversationIdFromUrl);
-      if (!selectedId && data?.length) setSelectedId(data[0]?.id);
-    }).catch(() => setConversations([])).finally(() => setLoading(false));
+    if (conversationsFetchedRef.current) {
+      setLoading(false);
+      return;
+    }
+    conversationsFetchedRef.current = true;
+    api.get('/conversations')
+      .then(({ data }) => {
+        const list = Array.isArray(data) ? data : [];
+        setConversations(list);
+        if (conversationIdFromUrl) {
+          const match = list.find((c) => String(c.id) === String(conversationIdFromUrl));
+          setSelectedId(match ? match.id : conversationIdFromUrl);
+        } else if (list.length) setSelectedId((prev) => prev || list[0]?.id);
+      })
+      .catch(() => setConversations([]))
+      .finally(() => setLoading(false));
   }, [isAuthenticated, conversationIdFromUrl]);
+
+  // When URL conversation param changes, sync selectedId from existing list (no refetch)
+  useEffect(() => {
+    if (!conversationIdFromUrl || !conversations.length) return;
+    const match = conversations.find((c) => String(c.id) === String(conversationIdFromUrl));
+    if (match) setSelectedId(match.id);
+    else setSelectedId(conversationIdFromUrl);
+  }, [conversationIdFromUrl, conversations]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -42,7 +61,7 @@ export function Chat() {
       setTimeout(scrollToBottom, 100);
     }).catch(() => setMessages([]));
     api.patch(`/conversations/${selectedId}/mark-read`).then(() => {
-      api.get('/conversations').then(({ data }) => setConversations(Array.isArray(data) ? data : []));
+      setConversations((prev) => prev.map((c) => (c.id === selectedId ? { ...c, unread_count: 0 } : c)));
       window.dispatchEvent(new Event('chat-unread-changed'));
     }).catch(() => {});
   }, [selectedId, scrollToBottom]);
@@ -82,15 +101,6 @@ export function Chat() {
       // WebSocket not available (e.g. Reverb not running) – polling will keep chat working
     }
   }, [selectedId, user?.id, scrollToBottom]);
-
-  useEffect(() => {
-    if (!selectedId) return;
-    const id = setInterval(() => {
-      api.get(`/conversations/${selectedId}/messages`).then(({ data }) => setMessages(Array.isArray(data) ? data : [])).catch(() => {});
-      api.get('/conversations').then(({ data }) => setConversations(Array.isArray(data) ? data : [])).catch(() => {});
-    }, POLL_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [selectedId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -139,8 +149,8 @@ export function Chat() {
                   padding: '0.75rem 1rem',
                   textAlign: 'left',
                   border: 'none',
-                  background: selectedId === c.id ? 'var(--primary)' : 'transparent',
-                  color: selectedId === c.id ? 'white' : 'var(--text)',
+                  background: String(selectedId) === String(c.id) ? 'var(--primary)' : 'transparent',
+                  color: String(selectedId) === String(c.id) ? 'white' : 'var(--text)',
                   cursor: 'pointer',
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -156,12 +166,12 @@ export function Chat() {
           </div>
         </div>
         <div className="card chat-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 400 }}>
-          {!selected ? (
+          {!selectedId ? (
             <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Select a conversation or start a new one.</div>
           ) : (
             <>
               <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--border)', fontWeight: 600 }}>
-                {selected.other?.name} <span className="badge" style={{ marginLeft: '0.5rem', fontSize: '0.7rem', background: 'var(--primary)', color: 'white' }}>{selected.other?.role}</span>
+                {selected?.other?.name ?? 'Conversation'}{selected?.other?.role != null && <span className="badge" style={{ marginLeft: '0.5rem', fontSize: '0.7rem', background: 'var(--primary)', color: 'white' }}> {selected.other.role}</span>}
               </div>
               <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {messages.map((m) => (

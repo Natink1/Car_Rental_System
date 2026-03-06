@@ -22,28 +22,30 @@ export function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Conversation list disabled – no GET /conversations for unread count
   useEffect(() => {
     if (!isAuthenticated) {
       setUnreadCount(0);
       return;
     }
-    const fetchUnread = () => {
-      api.get('/conversations')
-        .then(({ data }) => {
-          const list = Array.isArray(data) ? data : [];
-          const total = list.reduce((sum, c) => sum + (c.unread_count || 0), 0);
-          setUnreadCount(total);
-        })
-        .catch(() => setUnreadCount(0));
-    };
-    fetchUnread();
-    const interval = setInterval(fetchUnread, 15000);
-    const onUnreadChanged = () => fetchUnread();
-    window.addEventListener('chat-unread-changed', onUnreadChanged);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('chat-unread-changed', onUnreadChanged);
-    };
+    setUnreadCount(0);
+    // const fetchUnread = () => {
+    //   api.get('/conversations')
+    //     .then(({ data }) => {
+    //       const list = Array.isArray(data) ? data : [];
+    //       const total = list.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+    //       setUnreadCount(total);
+    //     })
+    //     .catch(() => setUnreadCount(0));
+    // };
+    // fetchUnread();
+    // const interval = setInterval(fetchUnread, 15000);
+    // const onUnreadChanged = () => fetchUnread();
+    // window.addEventListener('chat-unread-changed', onUnreadChanged);
+    // return () => {
+    //   clearInterval(interval);
+    //   window.removeEventListener('chat-unread-changed', onUnreadChanged);
+    // };
   }, [isAuthenticated]);
 
   const handleLogout = () => {
