@@ -24,7 +24,7 @@ class AdminUserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'in:customer,owner,admin'],
-            'phone' => ['nullable', 'string', 'max:30'],
+            'phone' => ['required_if:role,customer,owner', 'string', 'max:30'],
         ];
 
         if ($request->input('role') === 'owner') {

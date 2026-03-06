@@ -42,6 +42,8 @@ export function OwnerDashboard() {
   const carsApproved = data.cars_approved || [];
   const carsPending = data.cars_pending || [];
   const bookings = data.active_bookings || [];
+  const pendingApprovalCount = bookings.filter((b) => b.status === 'pending').length;
+  const rejectedCarsCount = (data.cars_pending || []).filter((c) => c.status === 'rejected').length;
 
   const refreshData = () => {
     api.get('/dashboard/owner').then(({ data: d }) => setData(d)).catch(() => {});
@@ -85,7 +87,7 @@ export function OwnerDashboard() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={async () => { try { await api.patch(`/cars/${car.id}/reapply`); refreshData(); } catch (_) {} }}
+              onClick={async () => { try { await api.patch(`/cars/${car.id}/reapply`); refreshData(); window.dispatchEvent(new Event('owner-rejected-changed')); } catch (_) {} }}
             >
               Reapply listing
             </button>
@@ -120,7 +122,22 @@ export function OwnerDashboard() {
         <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)' }}>${Number(data.earnings || 0).toFixed(2)}</p>
       </div>
 
-      <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Active bookings (your cars)</h2>
+      {rejectedCarsCount > 0 && (
+        <div className="dashboard-alert dashboard-alert-rejected" style={{ marginBottom: '1.5rem' }}>
+          <span className="dashboard-alert-text">
+            <strong>{rejectedCarsCount}</strong> listing{rejectedCarsCount !== 1 ? 's' : ''} rejected — reapply below
+          </span>
+        </div>
+      )}
+
+      <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+        Active bookings (your cars)
+        {pendingApprovalCount > 0 && (
+          <span className="badge badge-pending" style={{ fontSize: '0.8rem' }}>
+            {pendingApprovalCount} need approval
+          </span>
+        )}
+      </h2>
       <div className="grid" style={{ marginBottom: '2rem' }}>
         {bookings.length === 0 && <p style={{ color: 'var(--text-muted)' }}>No active bookings.</p>}
         {bookings.map((b) => (

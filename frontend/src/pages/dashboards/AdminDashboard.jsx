@@ -24,12 +24,14 @@ export function AdminDashboard() {
     await api.patch(`/admin/cars/${id}/approve`);
     setPendingCars((prev) => prev.filter((c) => c.id !== id));
     if (stats) setStats((s) => ({ ...s, pending_approvals: Math.max(0, (s.pending_approvals || 0) - 1) }));
+    window.dispatchEvent(new Event('admin-pending-changed'));
   };
 
   const handleReject = async (id) => {
     await api.patch(`/admin/cars/${id}/reject`);
     setPendingCars((prev) => prev.filter((c) => c.id !== id));
     if (stats) setStats((s) => ({ ...s, pending_approvals: Math.max(0, (s.pending_approvals || 0) - 1) }));
+    window.dispatchEvent(new Event('admin-pending-changed'));
   };
 
   if (loading) return <div className="page-loading"><div className="spinner" /></div>;
@@ -43,6 +45,14 @@ export function AdminDashboard() {
       </div>
 
       <AdminUsersModal open={usersModalOpen} onClose={() => setUsersModalOpen(false)} />
+
+      {(stats?.pending_approvals ?? 0) > 0 && (
+        <div className="dashboard-alert dashboard-alert-pending" style={{ marginBottom: '1.5rem' }}>
+          <span className="dashboard-alert-text">
+            <strong>{stats.pending_approvals}</strong> vehicle{stats.pending_approvals !== 1 ? 's' : ''} pending approval
+          </span>
+        </div>
+      )}
 
       <div className="grid grid-2 grid-4" style={{ marginBottom: '2rem', gap: '1rem' }}>
         <div className="card" style={{ padding: '1.5rem' }}>

@@ -64,6 +64,7 @@ class DashboardController extends Controller
 
         $carsApproved = $cars->where('status', 'approved')->map($formatCar)->values()->all();
         $carsPending = $cars->whereIn('status', ['pending', 'rejected'])->map($formatCar)->values()->all();
+        $rejectedCount = $cars->where('status', 'rejected')->count();
 
         return response()->json([
             'cars' => $cars->map($formatCar)->values()->all(),
@@ -71,6 +72,7 @@ class DashboardController extends Controller
             'cars_pending' => $carsPending,
             'active_bookings' => $activeBookings,
             'earnings' => (float) $earnings,
+            'rejected_count' => $rejectedCount,
         ]);
     }
 

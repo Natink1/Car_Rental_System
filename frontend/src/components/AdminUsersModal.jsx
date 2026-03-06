@@ -44,6 +44,10 @@ export function AdminUsersModal({ open, onClose }) {
       setCreateError('ID image is required for owner accounts.');
       return;
     }
+    if (createForm.role !== 'admin' && !createForm.phone?.trim()) {
+      setCreateError('Phone is required for customer and owner accounts.');
+      return;
+    }
     setCreateLoading(true);
     try {
       if (idImage && createForm.role === 'owner') {
@@ -54,11 +58,12 @@ export function AdminUsersModal({ open, onClose }) {
         formData.append('password_confirmation', createForm.password_confirmation);
         formData.append('role', createForm.role);
         formData.append('id_image', idImage);
-        if (createForm.role !== 'admin' && createForm.phone) formData.append('phone', createForm.phone);
+        if (createForm.role !== 'admin') formData.append('phone', createForm.phone || '');
         await api.post('/admin/users', formData);
       } else {
         const payload = { ...createForm, role: createForm.role };
         if (createForm.role === 'admin') delete payload.phone;
+        else payload.phone = payload.phone || '';
         await api.post('/admin/users', payload);
       }
       setShowCreate(false);
@@ -158,12 +163,13 @@ export function AdminUsersModal({ open, onClose }) {
                   </div>
                   {createForm.role !== 'admin' && (
                     <div className="form-group">
-                      <label>Phone (optional)</label>
+                      <label>Phone</label>
                       <input
                         type="tel"
                         value={createForm.phone}
                         onChange={(e) => setCreateForm((f) => ({ ...f, phone: e.target.value }))}
                         placeholder="e.g. +1234567890"
+                        required
                       />
                     </div>
                   )}

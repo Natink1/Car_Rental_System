@@ -8,6 +8,8 @@ export function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingApprovals, setPendingApprovals] = useState(0);
+  const [rejectedCount, setRejectedCount] = useState(0);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
@@ -22,31 +24,60 @@ export function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Conversation list disabled – no GET /conversations for unread count
   useEffect(() => {
     if (!isAuthenticated) {
       setUnreadCount(0);
+      setPendingApprovals(0);
+      setRejectedCount(0);
       return;
     }
-    setUnreadCount(0);
-    // const fetchUnread = () => {
-    //   api.get('/conversations')
-    //     .then(({ data }) => {
-    //       const list = Array.isArray(data) ? data : [];
-    //       const total = list.reduce((sum, c) => sum + (c.unread_count || 0), 0);
-    //       setUnreadCount(total);
-    //     })
-    //     .catch(() => setUnreadCount(0));
-    // };
-    // fetchUnread();
-    // const interval = setInterval(fetchUnread, 15000);
-    // const onUnreadChanged = () => fetchUnread();
-    // window.addEventListener('chat-unread-changed', onUnreadChanged);
-    // return () => {
-    //   clearInterval(interval);
-    //   window.removeEventListener('chat-unread-changed', onUnreadChanged);
-    // };
+    const fetchUnread = () => {
+      api.get('/conversations')
+        .then(({ data }) => {
+          const list = Array.isArray(data) ? data : [];
+          const total = list.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+          setUnreadCount(total);
+        })
+        .catch(() => setUnreadCount(0));
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 15000);
+    const onUnreadChanged = () => fetchUnread();
+    window.addEventListener('chat-unread-changed', onUnreadChanged);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('chat-unread-changed', onUnreadChanged);
+    };
   }, [isAuthenticated]);
+
+  const fetchAdminPending = () => {
+    if (user?.role !== 'admin') return;
+    api.get('/dashboard/admin')
+      .then(({ data }) => setPendingApprovals(data?.pending_approvals ?? 0))
+      .catch(() => setPendingApprovals(0));
+  };
+  const fetchOwnerRejected = () => {
+    if (user?.role !== 'owner') return;
+    api.get('/dashboard/owner')
+      .then(({ data }) => setRejectedCount(data?.rejected_count ?? 0))
+      .catch(() => setRejectedCount(0));
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== 'admin') return;
+    fetchAdminPending();
+    const onChanged = () => fetchAdminPending();
+    window.addEventListener('admin-pending-changed', onChanged);
+    return () => window.removeEventListener('admin-pending-changed', onChanged);
+  }, [isAuthenticated, user?.role]);
+
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== 'owner') return;
+    fetchOwnerRejected();
+    const onChanged = () => fetchOwnerRejected();
+    window.addEventListener('owner-rejected-changed', onChanged);
+    return () => window.removeEventListener('owner-rejected-changed', onChanged);
+  }, [isAuthenticated, user?.role]);
 
   const handleLogout = () => {
     logout();
@@ -64,7 +95,7 @@ export function Navbar() {
           <Link to="/cars">Cars</Link>
           {isAuthenticated && (
             <>
-              <Link to="/chat" className="navbar-chat-link">
+              <Link to="/chat" className={`navbar-chat-link${unreadCount > 0 ? ' navbar-link-highlight navbar-link-chat' : ''}`}>
                 Chat
                 {unreadCount > 0 && (
                   <span className="navbar-chat-badge" aria-label={`${unreadCount} unread messages`}>
@@ -75,11 +106,23 @@ export function Navbar() {
               {user?.role === 'customer' && <Link to="/customer/dashboard">Dashboard</Link>}
               {user?.role === 'owner' && (
                 <>
-                  <Link to="/owner/dashboard">Dashboard</Link>
+                  <Link to="/owner/dashboard" className={rejectedCount > 0 ? 'navbar-link-highlight navbar-link-rejected' : ''}>
+                    Dashboard
+                    {rejectedCount > 0 && (
+                      <span className="navbar-dashboard-badge navbar-badge-rejected">{rejectedCount}</span>
+                    )}
+                  </Link>
                   <Link to="/owner/cars/new">Add car</Link>
                 </>
               )}
-              {user?.role === 'admin' && <Link to="/admin/dashboard">Dashboard</Link>}
+              {user?.role === 'admin' && (
+                <Link to="/admin/dashboard" className={pendingApprovals > 0 ? 'navbar-link-highlight navbar-link-pending' : ''}>
+                  Dashboard
+                  {pendingApprovals > 0 && (
+                    <span className="navbar-dashboard-badge navbar-badge-pending">{pendingApprovals}</span>
+                  )}
+                </Link>
+              )}
               <span className="navbar-divider" aria-hidden="true" />
               <div className="navbar-profile-wrap" ref={profileRef}>
                 <button

@@ -25,6 +25,10 @@ export function Register() {
       setError('Please upload an ID image to register as owner.');
       return;
     }
+    if (!phone.trim()) {
+      setError('Phone is required.');
+      return;
+    }
     try {
       await register(name, email, password, passwordConfirmation, role, role === 'owner' ? idImage : null, phone);
       navigate(role === 'admin' ? '/admin/dashboard' : role === 'owner' ? '/owner/dashboard' : '/customer/dashboard', { replace: true });
@@ -51,8 +55,8 @@ export function Register() {
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <div className="form-group">
-            <label>Phone (optional)</label>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. +1234567890" />
+            <label>Phone</label>
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. +1234567890" required />
           </div>
           <div className="form-group">
             <label>Role</label>

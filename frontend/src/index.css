@@ -141,9 +141,9 @@ button.btn {
   text-transform: capitalize;
 }
 
-.badge-pending { background: #fef3c7; color: #92400e; }
+.badge-pending { background: #ffedd5; color: #c2410c; }
 .badge-approved { background: #d1fae5; color: #065f46; }
-.badge-rejected { background: #fee2e2; color: #991b1b; }
+.badge-rejected { background: #fecaca; color: #b91c1c; }
 .badge-cancelled { background: #e2e8f0; color: #475569; }
 
 input, select, textarea {
@@ -303,6 +303,47 @@ input:focus, select:focus, textarea:focus {
   justify-content: center;
   box-shadow: 0 1px 3px rgba(220, 38, 38, 0.4);
 }
+
+.navbar-link-highlight { font-weight: 600; }
+.navbar-link-chat.navbar-link-highlight { color: var(--primary); background: rgba(30, 64, 175, 0.12); }
+.navbar-link-chat.navbar-link-highlight:hover { color: var(--primary-light); background: rgba(30, 64, 175, 0.18); }
+.navbar-link-pending.navbar-link-highlight { color: #c2410c; background: rgba(194, 65, 12, 0.12); }
+.navbar-link-pending.navbar-link-highlight:hover { color: #ea580c; background: rgba(234, 88, 12, 0.18); }
+.navbar-link-rejected.navbar-link-highlight { color: #b91c1c; background: rgba(185, 28, 28, 0.12); }
+.navbar-link-rejected.navbar-link-highlight:hover { color: #dc2626; background: rgba(220, 38, 38, 0.18); }
+
+.navbar-dashboard-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: white;
+  border-radius: 999px;
+  margin-left: 0.35rem;
+}
+.navbar-badge-pending { background: #c2410c; }
+.navbar-badge-rejected { background: #b91c1c; }
+
+.dashboard-alert {
+  padding: 0.875rem 1.25rem;
+  border-radius: var(--radius);
+  font-size: 0.9375rem;
+}
+.dashboard-alert-pending {
+  background: #ffedd5;
+  color: #c2410c;
+  border: 1px solid rgba(194, 65, 12, 0.3);
+}
+.dashboard-alert-rejected {
+  background: #fecaca;
+  color: #b91c1c;
+  border: 1px solid rgba(185, 28, 28, 0.3);
+}
+.dashboard-alert-text { display: inline-block; }
 
 .navbar-links .btn-primary {
   padding: 0.5rem 1rem;
