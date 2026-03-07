@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axios';
+import * as carsApi from '../api/cars';
 
 export function AddCar() {
   const navigate = useNavigate();
@@ -47,7 +47,7 @@ export function AddCar() {
     Object.entries(form).forEach(([k, v]) => { if (v !== '') fd.append(k, v); });
     images.forEach((file) => fd.append('images[]', file));
     try {
-      await api.post('/cars', fd);
+      await carsApi.createCar(fd);
       navigate('/owner/dashboard');
     } catch (err) {
       const msg = err.response?.data?.errors

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import api, { setAuthToken } from '../api/axios';
+import { setAuthToken } from '../api/axios';
+import * as authApi from '../api/auth';
 import { disconnectEcho } from '../echo';
 
 const AuthContext = createContext(null);
@@ -23,7 +24,7 @@ export function AuthProvider({ children }) {
       return;
     }
     try {
-      const { data } = await api.get('/auth/me');
+      const data = await authApi.getMe();
       setUser(data);
       localStorage.setItem('user', JSON.stringify(data));
     } catch {
@@ -48,7 +49,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password) => {
-    const { data } = await api.post('/auth/login', { email, password });
+    const data = await authApi.login(email, password);
     setAuthToken(data.token);
     setUser(data.user);
     localStorage.setItem('user', JSON.stringify(data.user));
@@ -56,29 +57,27 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (name, email, password, password_confirmation, role, idImageFile = null, phone = '') => {
-    let data;
+    let payload;
     if (idImageFile) {
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('email', email);
-      formData.append('password', password);
-      formData.append('password_confirmation', password_confirmation);
-      formData.append('role', role || 'customer');
-      formData.append('id_image', idImageFile);
-      if (phone) formData.append('phone', phone);
-      const res = await api.post('/auth/register', formData);
-      data = res.data;
+      payload = new FormData();
+      payload.append('name', name);
+      payload.append('email', email);
+      payload.append('password', password);
+      payload.append('password_confirmation', password_confirmation);
+      payload.append('role', role || 'customer');
+      payload.append('id_image', idImageFile);
+      if (phone) payload.append('phone', phone);
     } else {
-      const res = await api.post('/auth/register', {
+      payload = {
         name,
         email,
         password,
         password_confirmation,
         role: role || 'customer',
         ...(phone && { phone }),
-      });
-      data = res.data;
+      };
     }
+    const data = await authApi.register(payload);
     setAuthToken(data.token);
     setUser(data.user);
     localStorage.setItem('user', JSON.stringify(data.user));
@@ -87,7 +86,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout');
+      await authApi.logout();
     } catch (_) {}
     disconnectEcho();
     setAuthToken(null);

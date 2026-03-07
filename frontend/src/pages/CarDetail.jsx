@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import api from '../api/axios';
+import * as carsApi from '../api/cars';
+import * as bookingsApi from '../api/bookings';
+import * as conversationsApi from '../api/conversations';
+import * as adminsApi from '../api/admins';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDisplayDate } from '../utils/dateFormat';
 import { getImageUrl } from '../utils/imageUrl';
@@ -35,20 +38,20 @@ export function CarDetail() {
       return;
     }
     setLoading(true);
-    api.get(`/cars/${id}`)
-      .then(({ data }) => setCar(data))
+    carsApi.getById(id)
+      .then((data) => setCar(data))
       .catch(() => setCar(null))
       .finally(() => setLoading(false));
   }, [id]);
 
   useEffect(() => {
     if (!id) return;
-    api.get(`/cars/${id}/reviews`).then(({ data }) => setReviews(Array.isArray(data) ? data : [])).catch(() => setReviews([]));
+    carsApi.getReviews(id).then((data) => setReviews(Array.isArray(data) ? data : [])).catch(() => setReviews([]));
   }, [id]);
 
   useEffect(() => {
     if (isAuthenticated) {
-      api.get('/admins').then(({ data }) => setAdmins(Array.isArray(data) ? data : [])).catch(() => setAdmins([]));
+      adminsApi.list().then((data) => setAdmins(Array.isArray(data) ? data : [])).catch(() => setAdmins([]));
     }
   }, [isAuthenticated]);
 
@@ -73,7 +76,7 @@ export function CarDetail() {
       return;
     }
     try {
-      await api.post('/bookings', { car_id: id, start_date: startDate, end_date: endDate });
+      await bookingsApi.create({ car_id: id, start_date: startDate, end_date: endDate });
       setBookingSuccess(true);
       navigate('/customer/dashboard');
     } catch (err) {
@@ -85,9 +88,9 @@ export function CarDetail() {
     e.preventDefault();
     setError('');
     try {
-      await api.post(`/cars/${id}/reviews`, { rating: reviewRating, comment: reviewComment });
+      await carsApi.createReview(id, { rating: reviewRating, comment: reviewComment });
       setReviewComment('');
-      const { data } = await api.get(`/cars/${id}/reviews`);
+      const data = await carsApi.getReviews(id);
       setReviews(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to submit review.');
@@ -100,7 +103,7 @@ export function CarDetail() {
       return;
     }
     try {
-      const { data } = await api.post('/conversations', { user_id: userId });
+      const data = await conversationsApi.create({ user_id: userId });
       navigate(`/chat?conversation=${data.id}`);
     } catch (_) {
       setError('Could not start conversation.');
@@ -111,7 +114,7 @@ export function CarDetail() {
     setDeleteLoading(true);
     setError('');
     try {
-      await api.delete(`/cars/${id}`);
+      await carsApi.deleteCar(id);
       navigate('/owner/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Could not delete car.');

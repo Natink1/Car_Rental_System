@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import api from '../api/axios';
+import * as carsApi from '../api/cars';
 import { getImageUrl } from '../utils/imageUrl';
 import { ConfirmModal } from '../components/ConfirmModal';
 
@@ -34,8 +34,8 @@ export function EditCar() {
       setLoading(false);
       return;
     }
-    api.get(`/cars/${id}`)
-      .then(({ data }) => {
+    carsApi.getById(id)
+      .then((data) => {
         setCar(data);
         setForm({
           brand: data.brand || '',
@@ -79,7 +79,7 @@ export function EditCar() {
     setDeleteLoading(true);
     setError('');
     try {
-      await api.delete(`/cars/${id}`);
+      await carsApi.deleteCar(id);
       navigate('/owner/dashboard');
     } catch (err) {
       const msg = err.response?.data?.errors
@@ -108,7 +108,7 @@ export function EditCar() {
       newImages.forEach((file) => fd.append('images[]', file));
     }
     try {
-      await api.post(`/cars/${id}`, fd);
+      await carsApi.updateCar(id, fd);
       navigate('/owner/dashboard');
     } catch (err) {
       const msg = err.response?.data?.errors

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import api from '../api/axios';
+import * as carsApi from '../api/cars';
+import * as adminApi from '../api/admin';
 import { getImageUrl } from '../utils/imageUrl';
 
 const FUEL = { petrol: 'Petrol', diesel: 'Diesel', electric: 'Electric', hybrid: 'Hybrid' };
@@ -21,8 +22,8 @@ export function AdminCarDetail() {
       return;
     }
     setLoading(true);
-    api.get(`/cars/${id}`)
-      .then(({ data }) => setCar(data))
+    carsApi.getById(id)
+      .then((data) => setCar(data))
       .catch(() => setCar(null))
       .finally(() => setLoading(false));
   }, [id]);
@@ -34,7 +35,7 @@ export function AdminCarDetail() {
   const handleApprove = async () => {
     setActionLoading(true);
     try {
-      await api.patch(`/admin/cars/${id}/approve`);
+      await adminApi.carApprove(id);
       setCar((c) => (c ? { ...c, status: 'approved' } : null));
       navigate('/admin/dashboard');
     } catch (err) {
@@ -45,7 +46,7 @@ export function AdminCarDetail() {
   const handleReject = async () => {
     setActionLoading(true);
     try {
-      await api.patch(`/admin/cars/${id}/reject`);
+      await adminApi.carReject(id);
       setCar((c) => (c ? { ...c, status: 'rejected' } : null));
       navigate('/admin/dashboard');
     } catch (err) {

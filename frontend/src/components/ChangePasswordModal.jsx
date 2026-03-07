@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import api from '../api/axios';
+import * as authApi from '../api/auth';
 
 export function ChangePasswordModal({ open, onClose }) {
   const { user } = useAuth();
@@ -21,7 +21,7 @@ export function ChangePasswordModal({ open, onClose }) {
     }
     setLoading(true);
     try {
-      await api.patch('/auth/password', {
+      await authApi.changePassword({
         current_password: currentPassword,
         password,
         password_confirmation: passwordConfirmation,

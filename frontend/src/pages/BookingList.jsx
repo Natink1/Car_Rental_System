@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../api/axios';
+import * as bookingsApi from '../api/bookings';
 import { formatDisplayDate } from '../utils/dateFormat';
 import { getImageUrl } from '../utils/imageUrl';
 
@@ -9,7 +9,7 @@ export function BookingList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/bookings').then(({ data }) => setBookings(Array.isArray(data) ? data : [])).catch(() => setBookings([])).finally(() => setLoading(false));
+    bookingsApi.list().then((data) => setBookings(Array.isArray(data) ? data : [])).catch(() => setBookings([])).finally(() => setLoading(false));
   }, []);
 
   const statusClass = (s) => {

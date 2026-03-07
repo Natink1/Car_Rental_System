@@ -1,18 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../../api/axios';
+import * as dashboardApi from '../../api/dashboard';
+import * as adminApi from '../../api/admin';
 import { getImageUrl } from '../../utils/imageUrl';
-import { AdminUsersModal } from '../../components/AdminUsersModal';
 
 export function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [pendingCars, setPendingCars] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [usersModalOpen, setUsersModalOpen] = useState(false);
 
   useEffect(() => {
-    api.get('/dashboard/admin').then(({ data }) => setStats(data)).catch(() => {});
-    api.get('/admin/cars/pending').then(({ data }) => setPendingCars(Array.isArray(data) ? data : [])).catch(() => setPendingCars([]));
+    dashboardApi.getAdmin().then((data) => setStats(data)).catch(() => {});
+    adminApi.getCarsPending().then((data) => setPendingCars(Array.isArray(data) ? data : [])).catch(() => setPendingCars([]));
   }, []);
 
   useEffect(() => {
@@ -21,14 +20,14 @@ export function AdminDashboard() {
   }, [stats]);
 
   const handleApprove = async (id) => {
-    await api.patch(`/admin/cars/${id}/approve`);
+    await adminApi.carApprove(id);
     setPendingCars((prev) => prev.filter((c) => c.id !== id));
     if (stats) setStats((s) => ({ ...s, pending_approvals: Math.max(0, (s.pending_approvals || 0) - 1) }));
     window.dispatchEvent(new Event('admin-pending-changed'));
   };
 
   const handleReject = async (id) => {
-    await api.patch(`/admin/cars/${id}/reject`);
+    await adminApi.carReject(id);
     setPendingCars((prev) => prev.filter((c) => c.id !== id));
     if (stats) setStats((s) => ({ ...s, pending_approvals: Math.max(0, (s.pending_approvals || 0) - 1) }));
     window.dispatchEvent(new Event('admin-pending-changed'));
@@ -41,10 +40,8 @@ export function AdminDashboard() {
       <h1 className="section-title">Admin Dashboard</h1>
       <div style={{ marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
         <Link to="/chat" className="btn btn-primary">Open Chat</Link>
-        <button type="button" className="btn btn-secondary" onClick={() => setUsersModalOpen(true)}>Users</button>
+        <Link to="/admin/users" className="btn btn-secondary">Users</Link>
       </div>
-
-      <AdminUsersModal open={usersModalOpen} onClose={() => setUsersModalOpen(false)} />
 
       {(stats?.pending_approvals ?? 0) > 0 && (
         <div className="dashboard-alert dashboard-alert-pending" style={{ marginBottom: '1.5rem' }}>

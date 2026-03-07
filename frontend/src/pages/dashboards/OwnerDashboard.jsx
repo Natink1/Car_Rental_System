@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../../api/axios';
+import * as dashboardApi from '../../api/dashboard';
+import * as adminsApi from '../../api/admins';
+import * as conversationsApi from '../../api/conversations';
+import * as carsApi from '../../api/cars';
+import * as bookingsApi from '../../api/bookings';
 import { formatDisplayDate } from '../../utils/dateFormat';
 import { getImageUrl } from '../../utils/imageUrl';
 import { ConfirmModal } from '../../components/ConfirmModal';
@@ -15,18 +19,18 @@ export function OwnerDashboard() {
   const [deleteError, setDeleteError] = useState('');
 
   useEffect(() => {
-    api.get('/dashboard/owner').then(({ data: d }) => setData(d)).catch(() => {}).finally(() => setLoading(false));
+    dashboardApi.getOwner().then((d) => setData(d)).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
-    api.get('/admins').then(({ data: list }) => setAdmins(Array.isArray(list) ? list : [])).catch(() => setAdmins([]));
+    adminsApi.list().then((list) => setAdmins(Array.isArray(list) ? list : [])).catch(() => setAdmins([]));
   }, []);
 
   const startChatWithAdmin = async () => {
     const admin = admins[0];
     if (!admin) return;
     try {
-      const { data: conv } = await api.post('/conversations', { user_id: admin.id });
+      const conv = await conversationsApi.create({ user_id: admin.id });
       navigate(`/chat?conversation=${conv.id}`);
     } catch (_) {}
   };
@@ -46,7 +50,7 @@ export function OwnerDashboard() {
   const rejectedCarsCount = (data.cars_pending || []).filter((c) => c.status === 'rejected').length;
 
   const refreshData = () => {
-    api.get('/dashboard/owner').then(({ data: d }) => setData(d)).catch(() => {});
+    dashboardApi.getOwner().then((d) => setData(d)).catch(() => {});
   };
 
   const handleDeleteCarClick = (carId) => {
@@ -59,7 +63,7 @@ export function OwnerDashboard() {
     setDeleteLoading(true);
     setDeleteError('');
     try {
-      await api.delete(`/cars/${deleteConfirmCarId}`);
+      await carsApi.deleteCar(deleteConfirmCarId);
       setDeleteConfirmCarId(null);
       refreshData();
     } catch (err) {
@@ -87,7 +91,7 @@ export function OwnerDashboard() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={async () => { try { await api.patch(`/cars/${car.id}/reapply`); refreshData(); window.dispatchEvent(new Event('owner-rejected-changed')); } catch (_) {} }}
+              onClick={async () => { try { await carsApi.reapply(car.id); refreshData(); window.dispatchEvent(new Event('owner-rejected-changed')); } catch (_) {} }}
             >
               Reapply listing
             </button>
@@ -154,8 +158,8 @@ export function OwnerDashboard() {
             <span className={`badge ${b.status === 'pending' ? 'badge-pending' : 'badge-approved'}`}>{b.status}</span>
             {b.status === 'pending' && (
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button type="button" className="btn btn-primary" onClick={async () => { await api.patch(`/bookings/${b.id}/approve`); window.location.reload(); }}>Approve</button>
-                <button type="button" className="btn btn-secondary" onClick={async () => { await api.patch(`/bookings/${b.id}/reject`); window.location.reload(); }}>Reject</button>
+                <button type="button" className="btn btn-primary" onClick={async () => { await bookingsApi.approve(b.id); window.location.reload(); }}>Approve</button>
+                <button type="button" className="btn btn-secondary" onClick={async () => { await bookingsApi.reject(b.id); window.location.reload(); }}>Reject</button>
               </div>
             )}
           </div>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import api from '../api/axios';
+import * as conversationsApi from '../api/conversations';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDisplayDate } from '../utils/dateFormat';
 import { getEcho } from '../echo';
@@ -30,8 +30,8 @@ export function Chat() {
       return;
     }
     conversationsFetchedRef.current = true;
-    api.get('/conversations')
-      .then(({ data }) => {
+    conversationsApi.list()
+      .then((data) => {
         const list = Array.isArray(data) ? data : [];
         setConversations(list);
         if (conversationIdFromUrl) {
@@ -56,11 +56,11 @@ export function Chat() {
       setMessages([]);
       return;
     }
-    api.get(`/conversations/${selectedId}/messages`).then(({ data }) => {
+    conversationsApi.getMessages(selectedId).then((data) => {
       setMessages(Array.isArray(data) ? data : []);
       setTimeout(scrollToBottom, 100);
     }).catch(() => setMessages([]));
-    api.patch(`/conversations/${selectedId}/mark-read`).then(() => {
+    conversationsApi.markRead(selectedId).then(() => {
       setConversations((prev) => prev.map((c) => (c.id === selectedId ? { ...c, unread_count: 0 } : c)));
       window.dispatchEvent(new Event('chat-unread-changed'));
     }).catch(() => {});
@@ -110,7 +110,7 @@ export function Chat() {
     e.preventDefault();
     if (!newMessage.trim() || !selectedId) return;
     try {
-      const { data } = await api.post(`/conversations/${selectedId}/messages`, { body: newMessage.trim() });
+      const data = await conversationsApi.sendMessage(selectedId, { body: newMessage.trim() });
       setMessages((prev) => [...prev, { ...data }]);
       setNewMessage('');
       scrollToBottom();

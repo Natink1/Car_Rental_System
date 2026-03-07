@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../api/axios';
+import * as carsApi from '../api/cars';
 import { getImageUrl } from '../utils/imageUrl';
 
 import car1 from '../assets/car1.jpeg';
@@ -29,7 +29,7 @@ export function HomePage() {
   };
 
   useEffect(() => {
-    api.get('/cars?featured=1').then(({ data }) => setFeatured(Array.isArray(data) ? data : data?.data || []));
+    carsApi.list({ featured: 1 }).then((data) => setFeatured(Array.isArray(data) ? data : data?.data || []));
   }, []);
 
   const featuredForShow = featured.slice(0, 6);

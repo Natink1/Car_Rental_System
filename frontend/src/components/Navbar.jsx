@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import api from '../api/axios';
+import * as conversationsApi from '../api/conversations';
+import * as dashboardApi from '../api/dashboard';
 import { ChangePasswordModal } from './ChangePasswordModal';
 
 export function Navbar() {
@@ -32,8 +33,8 @@ export function Navbar() {
       return;
     }
     const fetchUnread = () => {
-      api.get('/conversations')
-        .then(({ data }) => {
+      conversationsApi.list()
+        .then((data) => {
           const list = Array.isArray(data) ? data : [];
           const total = list.reduce((sum, c) => sum + (c.unread_count || 0), 0);
           setUnreadCount(total);
@@ -52,14 +53,14 @@ export function Navbar() {
 
   const fetchAdminPending = () => {
     if (user?.role !== 'admin') return;
-    api.get('/dashboard/admin')
-      .then(({ data }) => setPendingApprovals(data?.pending_approvals ?? 0))
+    dashboardApi.getAdmin()
+      .then((data) => setPendingApprovals(data?.pending_approvals ?? 0))
       .catch(() => setPendingApprovals(0));
   };
   const fetchOwnerRejected = () => {
     if (user?.role !== 'owner') return;
-    api.get('/dashboard/owner')
-      .then(({ data }) => setRejectedCount(data?.rejected_count ?? 0))
+    dashboardApi.getOwner()
+      .then((data) => setRejectedCount(data?.rejected_count ?? 0))
       .catch(() => setRejectedCount(0));
   };
 

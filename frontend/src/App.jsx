@@ -15,6 +15,7 @@ import { CustomerDashboard } from './pages/dashboards/CustomerDashboard';
 import { OwnerDashboard } from './pages/dashboards/OwnerDashboard';
 import { AdminDashboard } from './pages/dashboards/AdminDashboard';
 import { AdminCarDetail } from './pages/AdminCarDetail';
+import { AdminUsers } from './pages/dashboards/AdminUsers';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
           <Route path="/owner/dashboard" element={<Layout><ProtectedRoute allowedRoles={['owner']}><OwnerDashboard /></ProtectedRoute></Layout>} />
           <Route path="/admin/dashboard" element={<Layout><ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute></Layout>} />
           <Route path="/admin/cars/:id" element={<Layout><ProtectedRoute allowedRoles={['admin']}><AdminCarDetail /></ProtectedRoute></Layout>} />
+          <Route path="/admin/users" element={<Layout><ProtectedRoute allowedRoles={['admin']}><AdminUsers /></ProtectedRoute></Layout>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

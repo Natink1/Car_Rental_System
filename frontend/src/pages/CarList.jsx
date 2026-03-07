@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import api from '../api/axios';
+import * as carsApi from '../api/cars';
 import { getImageUrl } from '../utils/imageUrl';
 
 const FILTER_KEYS = ['q', 'brand', 'min_price', 'max_price', 'transmission', 'fuel_type', 'seats'];
@@ -53,8 +53,8 @@ export function CarList() {
       const v = searchParams.get(key);
       if (v != null && v !== '') params[key] = v;
     });
-    api.get('/cars', { params })
-      .then(({ data }) => {
+    carsApi.list(params)
+      .then((data) => {
         if (data && typeof data.current_page === 'number') {
           setCars(data.data || []);
           setPagination({

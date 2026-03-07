@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import api from '../api/axios';
+import * as authApi from '../api/auth';
 
 export function ChangePassword() {
   const { user } = useAuth();
@@ -22,7 +22,7 @@ export function ChangePassword() {
     }
     setLoading(true);
     try {
-      await api.patch('/auth/password', {
+      await authApi.changePassword({
         current_password: currentPassword,
         password,
         password_confirmation: passwordConfirmation,

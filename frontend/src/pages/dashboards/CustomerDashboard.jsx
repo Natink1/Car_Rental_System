@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../../api/axios';
+import * as dashboardApi from '../../api/dashboard';
+import * as adminsApi from '../../api/admins';
+import * as conversationsApi from '../../api/conversations';
 import { formatDisplayDate } from '../../utils/dateFormat';
 import { getImageUrl } from '../../utils/imageUrl';
 
@@ -11,18 +13,18 @@ export function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/dashboard/customer').then(({ data: d }) => setData(d)).catch(() => {}).finally(() => setLoading(false));
+    dashboardApi.getCustomer().then((d) => setData(d)).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
-    api.get('/admins').then(({ data: list }) => setAdmins(Array.isArray(list) ? list : [])).catch(() => setAdmins([]));
+    adminsApi.list().then((list) => setAdmins(Array.isArray(list) ? list : [])).catch(() => setAdmins([]));
   }, []);
 
   const startChatWithAdmin = async () => {
     const admin = admins[0];
     if (!admin) return;
     try {
-      const { data: conv } = await api.post('/conversations', { user_id: admin.id });
+      const conv = await conversationsApi.create({ user_id: admin.id });
       navigate(`/chat?conversation=${conv.id}`);
     } catch (_) {}
   };
