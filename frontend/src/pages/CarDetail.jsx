@@ -6,6 +6,7 @@ import * as conversationsApi from '../api/conversations';
 import * as adminsApi from '../api/admins';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDisplayDate } from '../utils/dateFormat';
+import { formatBirr } from '../utils/currency';
 import { getImageUrl } from '../utils/imageUrl';
 import { ConfirmModal } from '../components/ConfirmModal';
 
@@ -184,7 +185,7 @@ export function CarDetail() {
             <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
               {car.year} · {TRANS[car.transmission] || car.transmission} · {FUEL[car.fuel_type] || car.fuel_type} · {car.seats} seats
             </p>
-            <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)' }}>${Number(car.price_per_day).toFixed(2)} <span style={{ fontSize: '0.875rem', fontWeight: 400, color: 'var(--text-muted)' }}>/ day</span></p>
+            <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)' }}>{formatBirr(car.price_per_day)} <span style={{ fontSize: '0.875rem', fontWeight: 400, color: 'var(--text-muted)' }}>/ day</span></p>
 
             {isAuthenticated && user?.role === 'owner' && ownerId === user?.id && (
               <>
@@ -245,6 +246,22 @@ export function CarDetail() {
           <div className="card" style={{ padding: '1.5rem', position: 'sticky', top: '6rem' }}>
             <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Book this car</h2>
             {car.status !== 'approved' && <p style={{ color: 'var(--text-muted)' }}>This car is not available for booking.</p>}
+            {car.status === 'approved' && car.current_rental && (
+              <p style={{ padding: '0.75rem', background: 'var(--bg)', borderRadius: 'var(--radius)', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>
+                <strong>This car is on rent</strong> from {formatDisplayDate(car.current_rental.start_date)} to {formatDisplayDate(car.current_rental.end_date)}.
+              </p>
+            )}
+            {car.status === 'approved' && car.booked_ranges && car.booked_ranges.length > 0 && (
+              <p style={{ padding: '0.75rem', background: 'var(--bg)', borderRadius: 'var(--radius)', marginBottom: '1rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                <strong>Already booked:</strong>{' '}
+                {car.booked_ranges.map((range, i) => (
+                  <span key={i}>
+                    {i > 0 && '; '}
+                    {formatDisplayDate(range.start_date)} – {formatDisplayDate(range.end_date)}
+                  </span>
+                ))}
+              </p>
+            )}
             {canBook && (
               <>
                 {error && <p className="error-msg">{error}</p>}
@@ -260,7 +277,7 @@ export function CarDetail() {
                   </div>
                   {days > 0 && (
                     <p style={{ marginBottom: '1rem' }}>
-                      <strong>Total: ${totalPrice.toFixed(2)}</strong> ({days} days)
+                      <strong>Total: {formatBirr(totalPrice)}</strong> ({days} days)
                     </p>
                   )}
                   <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Book Now</button>
@@ -307,6 +324,7 @@ export function CarDetail() {
         variant="danger"
         loading={deleteLoading}
       />
+
     </div>
   );
 }

@@ -29,6 +29,9 @@ Route::get('cars', [CarController::class, 'index']);
 Route::get('cars/{id}', [CarController::class, 'show']);
 Route::get('cars/{carId}/reviews', [ReviewController::class, 'index']);
 
+// Chapa payment callback (public – Chapa server calls this after payment)
+Route::get('payments/chapa-callback', [PaymentController::class, 'chapaCallback']);
+
 Route::middleware('auth:api')->group(function () {
     Route::get('admins', fn () => response()->json(\App\Models\User::where('role', 'admin')->get(['id', 'name', 'email'])));
     Route::post('cars', [CarController::class, 'store'])->middleware('role:owner');
@@ -46,6 +49,8 @@ Route::middleware('auth:api')->group(function () {
     Route::patch('bookings/{id}/reject', [BookingController::class, 'reject'])->middleware('role:owner');
 
     Route::get('bookings/{bookingId}/payments', [PaymentController::class, 'index']);
+    Route::post('bookings/{bookingId}/payments/initialize-chapa', [PaymentController::class, 'initializeChapa'])->middleware('role:customer,owner');
+    Route::post('payments/verify-chapa', [PaymentController::class, 'verifyChapa'])->middleware('role:customer,owner');
     Route::post('bookings/{bookingId}/payments/simulate', [PaymentController::class, 'simulate'])->middleware('role:customer');
 
     Route::post('cars/{carId}/reviews', [ReviewController::class, 'store']);

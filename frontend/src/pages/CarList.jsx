@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import * as carsApi from '../api/cars';
 import { getImageUrl } from '../utils/imageUrl';
+import { formatDisplayDate } from '../utils/dateFormat';
+import { formatBirr } from '../utils/currency';
 
 const FILTER_KEYS = ['q', 'brand', 'min_price', 'max_price', 'transmission', 'fuel_type', 'seats'];
 const DEBOUNCE_MS = 350;
@@ -129,7 +131,7 @@ export function CarList() {
               />
             </div>
             <div className="form-group">
-              <label>Min price/day ($)</label>
+              <label>Min price/day (Birr)</label>
               <input
                 type="number"
                 min="0"
@@ -139,7 +141,7 @@ export function CarList() {
               />
             </div>
             <div className="form-group">
-              <label>Max price/day ($)</label>
+              <label>Max price/day (Birr)</label>
               <input
                 type="number"
                 min="0"
@@ -209,7 +211,12 @@ export function CarList() {
                 </div>
                 <div style={{ padding: '1rem' }}>
                   <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.125rem' }}>{car.brand} {car.model}</h3>
-                  <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.875rem' }}>${car.price_per_day}/day</p>
+                  <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.875rem' }}>{formatBirr(car.price_per_day)}/day</p>
+                  {car.current_rental && (
+                    <p style={{ margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                      On rent until {formatDisplayDate(car.current_rental.end_date)}
+                    </p>
+                  )}
                   <span className="car-card-cta">View details</span>
                 </div>
               </Link>

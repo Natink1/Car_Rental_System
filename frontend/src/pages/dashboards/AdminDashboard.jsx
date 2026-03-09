@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import * as dashboardApi from '../../api/dashboard';
 import * as adminApi from '../../api/admin';
 import { getImageUrl } from '../../utils/imageUrl';
+import { formatBirr } from '../../utils/currency';
 
 export function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -70,7 +71,7 @@ export function AdminDashboard() {
         </div>
         <div className="card" style={{ padding: '1.5rem' }}>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Total revenue</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)' }}>${Number(stats?.total_revenue ?? 0).toFixed(2)}</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)' }}>{formatBirr(stats?.total_revenue ?? 0)}</div>
         </div>
       </div>
 
@@ -85,7 +86,7 @@ export function AdminDashboard() {
             </div>
             <div style={{ flex: 1, minWidth: 180 }}>
               <strong>{car.brand} {car.model}</strong>
-              <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: 'var(--text-muted)' }}>{car.year} · ${car.price_per_day}/day</p>
+              <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: 'var(--text-muted)' }}>{car.year} · {formatBirr(car.price_per_day)}/day</p>
               {car.owner && (
                 <p style={{ margin: '0.5rem 0 0', fontSize: '0.8125rem', color: 'var(--primary)', fontWeight: 500 }}>
                   Requested by: {car.owner.name} ({car.owner.email})

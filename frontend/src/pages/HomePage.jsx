@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import * as carsApi from '../api/cars';
 import { getImageUrl } from '../utils/imageUrl';
+import { formatBirr } from '../utils/currency';
 
 import car1 from '../assets/car1.jpeg';
 import car2 from '../assets/car2.jpg';
@@ -86,7 +87,7 @@ export function HomePage() {
                   />
                 </div>
                 <div className="form-group mb-0">
-                  <label className="block text-xs font-medium text-slate-500 mb-1.5">Min price ($/day)</label>
+                  <label className="block text-xs font-medium text-slate-500 mb-1.5">Min price (Birr/day)</label>
                   <input
                     type="number"
                     min="0"
@@ -97,7 +98,7 @@ export function HomePage() {
                   />
                 </div>
                 <div className="form-group mb-0">
-                  <label className="block text-xs font-medium text-slate-500 mb-1.5">Max price ($/day)</label>
+                  <label className="block text-xs font-medium text-slate-500 mb-1.5">Max price (Birr/day)</label>
                   <input
                     type="number"
                     min="0"
@@ -181,7 +182,7 @@ export function HomePage() {
                     <div className="w-full h-full flex items-center justify-center text-slate-500 text-sm">No image</div>
                   )}
                   <span className="absolute bottom-3 right-3 bg-black/75 text-white px-2.5 py-1.5 rounded text-sm font-semibold">
-                    ${Number(car.price_per_day).toFixed(0)}<small className="font-normal text-xs opacity-90">/day</small>
+                    {formatBirr(car.price_per_day)}<small className="font-normal text-xs opacity-90">/day</small>
                   </span>
                 </div>
                 <div className="p-5">

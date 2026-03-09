@@ -25,7 +25,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Only clear session and log out on 401 from the auth check (getMe). Other 401s (e.g. payment)
+    // just reject so the current page can show the error instead of going white.
+    const isAuthCheck = error.config?.method === 'get' && String(error.config?.url || '').includes('auth/me');
+    if (error.response?.status === 401 && isAuthCheck) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.dispatchEvent(new Event('auth-logout'));

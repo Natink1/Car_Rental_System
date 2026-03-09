@@ -85,93 +85,130 @@ export function Navbar() {
     navigate('/');
   };
 
+  const formatRole = (role) => {
+    if (!role) return 'User';
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  };
+
   return (
-    <header className="navbar">
-      <div className="container navbar-inner">
-        <Link to="/" className="navbar-brand">
-          <span className="navbar-brand-text">NHK Car-Rental</span>
-        </Link>
-        <nav className="navbar-links">
-          <Link to="/">Home</Link>
-          <Link to="/cars">Cars</Link>
-          {isAuthenticated && (
-            <>
-              <Link to="/chat" className={`navbar-chat-link${unreadCount > 0 ? ' navbar-link-highlight navbar-link-chat' : ''}`}>
-                Chat
-                {unreadCount > 0 && (
-                  <span className="navbar-chat-badge" aria-label={`${unreadCount} unread messages`}>
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
-                )}
-              </Link>
-              {user?.role === 'customer' && <Link to="/customer/dashboard">Dashboard</Link>}
-              {user?.role === 'owner' && (
-                <>
-                  <Link to="/owner/dashboard" className={rejectedCount > 0 ? 'navbar-link-highlight navbar-link-rejected' : ''}>
-                    Dashboard
-                    {rejectedCount > 0 && (
-                      <span className="navbar-dashboard-badge navbar-badge-rejected">{rejectedCount}</span>
-                    )}
-                  </Link>
-                  <Link to="/owner/cars/new">Add car</Link>
-                </>
-              )}
-              {user?.role === 'admin' && (
-                <Link to="/admin/dashboard" className={pendingApprovals > 0 ? 'navbar-link-highlight navbar-link-pending' : ''}>
-                  Dashboard
-                  {pendingApprovals > 0 && (
-                    <span className="navbar-dashboard-badge navbar-badge-pending">{pendingApprovals}</span>
+    <>
+      <header className="navbar">
+        <div className="container navbar-inner">
+          <Link to="/" className="navbar-brand">
+            <span className="navbar-brand-text">NHK Car-Rental</span>
+          </Link>
+          <nav className="navbar-links">
+            <Link to="/">Home</Link>
+            <Link to="/cars">Cars</Link>
+            {isAuthenticated && (
+              <>
+                <Link to="/chat" className={`navbar-chat-link${unreadCount > 0 ? ' navbar-link-highlight navbar-link-chat' : ''}`}>
+                  Chat
+                  {unreadCount > 0 && (
+                    <span className="navbar-chat-badge" aria-label={`${unreadCount} unread messages`}>
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
                   )}
                 </Link>
-              )}
-              <span className="navbar-divider" aria-hidden="true" />
-              <div className="navbar-profile-wrap" ref={profileRef}>
-                <button
-                  type="button"
-                  className="navbar-profile-trigger"
-                  onClick={() => setProfileOpen((o) => !o)}
-                  aria-expanded={profileOpen}
-                  aria-haspopup="true"
-                  title="Profile menu"
-                >
-                  <span className="navbar-profile-avatar" aria-hidden="true">
-                    {(user?.name || 'U').charAt(0).toUpperCase()}
-                  </span>
-                  <span className="navbar-profile-name">{user?.name || 'User'}</span>
-                </button>
-                {profileOpen && (
-                  <div className="navbar-profile-dropdown" role="menu">
-                    <button
-                      type="button"
-                      className="navbar-profile-item"
-                      role="menuitem"
-                      onClick={() => { setProfileOpen(false); setShowChangePasswordModal(true); }}
-                    >
-                      Change password
-                    </button>
-                    <button
-                      type="button"
-                      className="navbar-profile-item"
-                      role="menuitem"
-                      onClick={() => { setProfileOpen(false); handleLogout(); }}
-                    >
-                      Logout
-                    </button>
-                  </div>
+                {user?.role === 'customer' && <Link to="/customer/dashboard">Dashboard</Link>}
+                {user?.role === 'owner' && (
+                  <>
+                    <Link to="/owner/dashboard" className={rejectedCount > 0 ? 'navbar-link-highlight navbar-link-rejected' : ''}>
+                      Dashboard
+                      {rejectedCount > 0 && (
+                        <span className="navbar-dashboard-badge navbar-badge-rejected">{rejectedCount}</span>
+                      )}
+                    </Link>
+                    <Link to="/owner/cars/new">Add car</Link>
+                  </>
                 )}
-              </div>
-              <ChangePasswordModal open={showChangePasswordModal} onClose={() => setShowChangePasswordModal(false)} />
-            </>
-          )}
-          {!isAuthenticated && (
-            <>
-              <span className="navbar-divider" aria-hidden="true" />
-              <Link to="/login">Login</Link>
-              <Link to="/register" className="btn btn-primary">Register</Link>
-            </>
-          )}
-        </nav>
-      </div>
-    </header>
+                {user?.role === 'admin' && (
+                  <Link to="/admin/dashboard" className={pendingApprovals > 0 ? 'navbar-link-highlight navbar-link-pending' : ''}>
+                    Dashboard
+                    {pendingApprovals > 0 && (
+                      <span className="navbar-dashboard-badge navbar-badge-pending">{pendingApprovals}</span>
+                    )}
+                  </Link>
+                )}
+                <span className="navbar-divider" aria-hidden="true" />
+                <div className="navbar-profile-wrap" ref={profileRef}>
+                  <button
+                    type="button"
+                    className="navbar-profile-trigger"
+                    onClick={() => setProfileOpen((o) => !o)}
+                    aria-expanded={profileOpen}
+                    title="Profile info"
+                  >
+                    <span className="navbar-profile-avatar" aria-hidden="true">
+                      {(user?.name || 'U').charAt(0).toUpperCase()}
+                    </span>
+                    <span className="navbar-profile-name">{user?.name || 'User'}</span>
+                  </button>
+                  {profileOpen && (
+                    <div className="navbar-profile-dropdown" role="menu" style={{ minWidth: 260, padding: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.85rem' }}>
+                        <div
+                          style={{
+                            width: 38,
+                            height: 38,
+                            borderRadius: '999px',
+                            background: 'rgba(29, 78, 216, 0.12)',
+                            color: '#1d4ed8',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 700,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {(user?.name || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 700 }}>{user?.name || 'N/A'}</div>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{formatRole(user?.role)}</div>
+                        </div>
+                      </div>
+
+                      <div style={{ marginBottom: '0.85rem', paddingBottom: '0.85rem', borderBottom: '1px solid var(--border)' }}>
+                        <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>Email</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 500, wordBreak: 'break-word' }}>{user?.email || 'N/A'}</div>
+                      </div>
+
+                      <div style={{ display: 'grid', gap: '0.35rem' }}>
+                        <button
+                          type="button"
+                          className="navbar-profile-item"
+                          role="menuitem"
+                          onClick={() => { setProfileOpen(false); setShowChangePasswordModal(true); }}
+                        >
+                          Change password
+                        </button>
+                        <button
+                          type="button"
+                          className="navbar-profile-item"
+                          role="menuitem"
+                          onClick={() => { setProfileOpen(false); handleLogout(); }}
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <ChangePasswordModal open={showChangePasswordModal} onClose={() => setShowChangePasswordModal(false)} />
+              </>
+            )}
+            {!isAuthenticated && (
+              <>
+                <span className="navbar-divider" aria-hidden="true" />
+                <Link to="/login">Login</Link>
+                <Link to="/register" className="btn btn-primary">Register</Link>
+              </>
+            )}
+          </nav>
+        </div>
+      </header>
+
+    </>
   );
 }

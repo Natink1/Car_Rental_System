@@ -6,8 +6,10 @@ import * as conversationsApi from '../../api/conversations';
 import * as carsApi from '../../api/cars';
 import * as bookingsApi from '../../api/bookings';
 import { formatDisplayDate } from '../../utils/dateFormat';
+import { formatBirr } from '../../utils/currency';
 import { getImageUrl } from '../../utils/imageUrl';
 import { ConfirmModal } from '../../components/ConfirmModal';
+import { PaymentReceiptActions } from '../../components/PaymentReceiptActions';
 
 export function OwnerDashboard() {
   const navigate = useNavigate();
@@ -39,6 +41,16 @@ export function OwnerDashboard() {
     if (s === 'pending') return 'badge-pending';
     if (s === 'approved') return 'badge-approved';
     return 'badge-rejected';
+  };
+
+  const carStatusLabel = (status) => {
+    if (status === 'approved') return 'Listed';
+    return status;
+  };
+
+  const isPaid = (booking) => {
+    const payments = booking.payments || [];
+    return payments.some((p) => p.payment_status === 'completed');
   };
 
   if (loading) return <div className="page-loading"><div className="spinner" /></div>;
@@ -82,7 +94,7 @@ export function OwnerDashboard() {
         </div>
         <div style={{ padding: '1rem' }}>
           <strong>{car.brand} {car.model}</strong>
-          <span className={`badge ${statusClass(car.status)}`} style={{ marginLeft: '0.5rem' }}>{car.status}</span>
+          <span className={`badge ${statusClass(car.status)}`} style={{ marginLeft: '0.5rem' }}>{carStatusLabel(car.status)}</span>
         </div>
       </Link>
       {car.can_owner_edit && (
@@ -123,7 +135,7 @@ export function OwnerDashboard() {
 
       <div className="card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
         <h2 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Earnings summary</h2>
-        <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)' }}>${Number(data.earnings || 0).toFixed(2)}</p>
+        <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)' }}>{formatBirr(data.earnings || 0)}</p>
       </div>
 
       {rejectedCarsCount > 0 && (
@@ -155,20 +167,28 @@ export function OwnerDashboard() {
                 {formatDisplayDate(b.start_date)} – {formatDisplayDate(b.end_date)} · {b.user?.name}
               </p>
             </div>
-            <span className={`badge ${b.status === 'pending' ? 'badge-pending' : 'badge-approved'}`}>{b.status}</span>
+            {b.status !== 'approved' && (
+              <span className={`badge ${b.status === 'pending' ? 'badge-pending' : 'badge-approved'}`}>{b.status}</span>
+            )}
+            {b.status === 'approved' && (
+              <span className={`badge ${isPaid(b) ? 'badge-approved' : ''}`} style={!isPaid(b) ? { background: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b' } : undefined}>
+                {isPaid(b) ? 'Paid' : 'Unpaid'}
+              </span>
+            )}
+            {isPaid(b) && <PaymentReceiptActions booking={b} />}
             {b.status === 'pending' && (
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button type="button" className="btn btn-primary" onClick={async () => { await bookingsApi.approve(b.id); window.location.reload(); }}>Approve</button>
-                <button type="button" className="btn btn-secondary" onClick={async () => { await bookingsApi.reject(b.id); window.location.reload(); }}>Reject</button>
+                <button type="button" className="btn btn-primary" onClick={async () => { await bookingsApi.approve(b.id); refreshData(); window.dispatchEvent(new Event('admin-pending-changed')); }}>Approve</button>
+                <button type="button" className="btn btn-secondary" onClick={async () => { await bookingsApi.reject(b.id); refreshData(); }}>Reject</button>
               </div>
             )}
           </div>
         ))}
       </div>
 
-      <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Approved cars</h2>
+      <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Listed cars</h2>
       <div className="grid grid-3" style={{ marginBottom: '2rem' }}>
-        {carsApproved.length === 0 && <p style={{ color: 'var(--text-muted)' }}>No approved cars.</p>}
+        {carsApproved.length === 0 && <p style={{ color: 'var(--text-muted)' }}>No listed cars.</p>}
         {carsApproved.map((car) => <CarCard key={car.id} car={car} />)}
       </div>
 

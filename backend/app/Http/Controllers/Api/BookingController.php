@@ -6,7 +6,6 @@ use App\Helpers\MediaUrlHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Car;
-use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,12 +18,12 @@ class BookingController extends Controller
         $user = auth('api')->user();
 
         if ($user->isAdmin()) {
-            $query = Booking::with(['user:id,name,email', 'car.media']);
+            $query = Booking::with(['user:id,name,email', 'car.media', 'payments']);
         } elseif ($user->isOwner()) {
-            $query = Booking::with(['user:id,name,email', 'car.media'])
+            $query = Booking::with(['user:id,name,email', 'car.media', 'payments'])
                 ->whereHas('car', fn ($q) => $q->where('user_id', $user->id));
         } else {
-            $query = Booking::with(['car.media'])->where('user_id', $user->id);
+            $query = Booking::with(['car.media', 'car.owner:id,name,email', 'payments'])->where('user_id', $user->id);
         }
 
         $bookings = $query->orderBy('created_at', 'desc')->get()->map(fn ($b) => $this->formatBooking($b));
@@ -58,7 +57,7 @@ class BookingController extends Controller
         $end = Carbon::parse($request->end_date);
 
         $overlap = Booking::where('car_id', $car->id)
-            ->where('status', '!=', 'cancelled')
+            ->whereNotIn('status', ['cancelled', 'rejected'])
             ->where(function ($q) use ($start, $end) {
                 $q->whereBetween('start_date', [$start, $end])
                     ->orWhereBetween('end_date', [$start, $end])
@@ -153,14 +152,7 @@ class BookingController extends Controller
 
         $booking->update(['status' => 'approved']);
 
-        // Simulate payment on approval
-        // TODO: Integrate real payment gateway here
-        Payment::create([
-            'booking_id' => $booking->id,
-            'amount' => $booking->total_price,
-            'payment_status' => 'completed',
-            'transaction_reference' => 'SIM-' . strtoupper(uniqid()),
-        ]);
+        // Payment is recorded when the customer completes payment via Chapa (PaymentController::chapaCallback).
 
         return response()->json(['message' => 'Booking approved.', 'booking' => $this->formatBooking($booking->fresh(['car.media', 'payments']))]);
     }
@@ -205,6 +197,11 @@ class BookingController extends Controller
                 'brand' => $car->brand,
                 'model' => $car->model,
                 'image' => $firstImage,
+                'owner' => $car->relationLoaded('owner') && $car->owner ? [
+                    'id' => $car->owner->id,
+                    'name' => $car->owner->name,
+                    'email' => $car->owner->email,
+                ] : null,
             ] : null,
             'user' => $booking->relationLoaded('user') ? $booking->user : null,
             'payments' => $booking->relationLoaded('payments') ? $booking->payments : null,

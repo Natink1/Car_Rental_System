@@ -263,6 +263,32 @@ class CarController extends Controller
             $data['media'] = $media->map(fn ($m) => ['id' => $m->id, 'url' => MediaUrlHelper::fullUrl($m)])->values()->all();
         }
 
+        $today = now()->toDateString();
+        $currentRental = $car->bookings()
+            ->where('status', 'approved')
+            ->where('start_date', '<=', $today)
+            ->where('end_date', '>=', $today)
+            ->first();
+        if ($currentRental) {
+            $data['current_rental'] = [
+                'start_date' => $currentRental->start_date->format('Y-m-d'),
+                'end_date' => $currentRental->end_date->format('Y-m-d'),
+            ];
+        }
+
+        $upcomingBooked = $car->bookings()
+            ->where('status', 'approved')
+            ->where('start_date', '>', $today)
+            ->where('end_date', '>=', $today)
+            ->orderBy('start_date')
+            ->get(['start_date', 'end_date']);
+        if ($upcomingBooked->isNotEmpty()) {
+            $data['booked_ranges'] = $upcomingBooked->map(fn ($b) => [
+                'start_date' => $b->start_date->format('Y-m-d'),
+                'end_date' => $b->end_date->format('Y-m-d'),
+            ])->values()->all();
+        }
+
         return $data;
     }
 }
