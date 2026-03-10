@@ -145,6 +145,7 @@ button.btn {
 .badge-approved { background: #d1fae5; color: #065f46; }
 .badge-rejected { background: #fecaca; color: #b91c1c; }
 .badge-cancelled { background: #e2e8f0; color: #475569; }
+.badge-unpaid { background: rgba(29, 78, 216, 0.15); color: #1d4ed8; border: 1px solid rgba(29, 78, 216, 0.35); }
 
 input, select, textarea {
   width: 100%;
@@ -304,14 +305,6 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 1px 3px rgba(220, 38, 38, 0.4);
 }
 
-.navbar-link-highlight { font-weight: 600; }
-.navbar-link-chat.navbar-link-highlight { color: var(--primary); background: rgba(30, 64, 175, 0.12); }
-.navbar-link-chat.navbar-link-highlight:hover { color: var(--primary-light); background: rgba(30, 64, 175, 0.18); }
-.navbar-link-pending.navbar-link-highlight { color: #c2410c; background: rgba(194, 65, 12, 0.12); }
-.navbar-link-pending.navbar-link-highlight:hover { color: #ea580c; background: rgba(234, 88, 12, 0.18); }
-.navbar-link-rejected.navbar-link-highlight { color: #b91c1c; background: rgba(185, 28, 28, 0.12); }
-.navbar-link-rejected.navbar-link-highlight:hover { color: #dc2626; background: rgba(220, 38, 38, 0.18); }
-
 .navbar-dashboard-badge {
   display: inline-flex;
   align-items: center;
@@ -327,6 +320,7 @@ input:focus, select:focus, textarea:focus {
 }
 .navbar-badge-pending { background: #c2410c; }
 .navbar-badge-rejected { background: #b91c1c; }
+.navbar-badge-unpaid { background: #1d4ed8; }
 
 .dashboard-alert {
   padding: 0.875rem 1.25rem;

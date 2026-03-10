@@ -144,9 +144,12 @@ export function CustomerDashboard() {
               </div>
               <span className={`badge ${statusClass(b.status)}`}>{b.status}</span>
               {b.status === 'approved' && !hasCompletedPayment(b) && (
-                <button type="button" className="btn btn-primary" onClick={() => setPaymentBooking(b)}>
-                  Pay now
-                </button>
+                <>
+                  <span className="badge badge-unpaid">Unpaid</span>
+                  <button type="button" className="btn btn-primary" onClick={() => setPaymentBooking(b)}>
+                    Pay now
+                  </button>
+                </>
               )}
               {hasCompletedPayment(b) && <PaymentReceiptActions booking={b} />}
             </div>
@@ -159,7 +162,11 @@ export function CustomerDashboard() {
         onClose={() => setPaymentBooking(null)}
         booking={paymentBooking}
         amount={paymentBooking ? paymentBooking.total_price : 0}
-        onSuccess={() => { setPaymentBooking(null); refresh(); }}
+        onSuccess={() => {
+          setPaymentBooking(null);
+          refresh();
+          window.dispatchEvent(new Event('customer-pending-changed'));
+        }}
       />
 
       <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Booking history</h2>
@@ -186,6 +193,9 @@ export function CustomerDashboard() {
                 {formatBirr(b.total_price)}
               </div>
               <span className={`badge ${statusClass(b.status)}`}>{b.status}</span>
+              {b.status === 'approved' && !hasCompletedPayment(b) && (
+                <span className="badge badge-unpaid">Unpaid</span>
+              )}
               {hasCompletedPayment(b) && <PaymentReceiptActions booking={b} />}
             </div>
           </div>

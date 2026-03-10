@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import * as carsApi from '../api/cars';
 import { getImageUrl } from '../utils/imageUrl';
 import { formatBirr } from '../utils/currency';
+import { StarRating } from '../components/StarRating';
 
 import car1 from '../assets/car1.jpeg';
 import car2 from '../assets/car2.jpg';
@@ -187,6 +188,9 @@ export function HomePage() {
                 </div>
                 <div className="p-5">
                   <h3 className="text-lg font-semibold text-slate-800 mb-1">{car.brand} {car.model}</h3>
+                  <div className="mb-2">
+                    <StarRating rating={car.average_rating} reviewCount={car.reviews_count} />
+                  </div>
                   <span className="text-sm font-medium text-[var(--primary)] hover:underline">View details →</span>
                 </div>
               </Link>
@@ -256,24 +260,60 @@ export function HomePage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-12 bg-white">
+      <section className="py-16 bg-white">
         <div className="w-full max-w-[1200px] mx-auto px-4">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-slate-800">What our customers say</h2>
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl font-bold text-black">
+              Reviews from our customers
+            </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="p-6 bg-slate-50 rounded-xl border border-slate-200">
-              <p className="italic text-slate-800 mb-3 text-[0.9375rem]">&ldquo;Smooth booking and great cars. Will use again!&rdquo;</p>
-              <p className="text-sm font-medium text-slate-500">— Alex</p>
-            </div>
-            <div className="p-6 bg-slate-50 rounded-xl border border-slate-200">
-              <p className="italic text-slate-800 mb-3 text-[0.9375rem]">&ldquo;Best rates in town. Highly recommend NHK.&rdquo;</p>
-              <p className="text-sm font-medium text-slate-500">— Sam</p>
-            </div>
-            <div className="p-6 bg-slate-50 rounded-xl border border-slate-200">
-              <p className="italic text-slate-800 mb-3 text-[0.9375rem]">&ldquo;Professional service from start to finish.&rdquo;</p>
-              <p className="text-sm font-medium text-slate-500">— Jordan</p>
-            </div>
+            {[
+              {
+                quote: "NHK Car-Rental made my trip so easy. The car was clean, the booking process was quick, and the team was very helpful. I will definitely use them again.",
+                company: "AAU 5 Kilo",
+                author: "Natnael Deribe",
+                initials: "ND",
+              },
+              {
+                quote: "Great experience from start to finish. Fair prices, easy booking, and the car was in excellent condition. Highly recommend NHK Car-Rental for anyone in Addis.",
+                company: "AAU 4 Kilo",
+                author: "Habtamu Girma",
+                initials: "HG",
+              },
+              {
+                quote: "Best car rental service I have used. Professional staff, transparent pricing, and a smooth pickup and return. Five stars from me.",
+                company: "AAU 6 Kilo",
+                author: "Kaleab Mulugeta",
+                initials: "KM",
+              },
+            ].map(({ quote, company, author, initials }) => (
+              <div
+                key={author}
+                className="flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100"
+              >
+                <div className="flex-1 px-6 pt-6 pb-10 bg-white rounded-t-2xl">
+                  <div className="text-5xl sm:text-6xl leading-none text-[var(--primary)] mb-3 font-serif">&ldquo;</div>
+                  <p className="text-sm sm:text-[0.9375rem] text-black leading-relaxed">
+                    {quote}
+                  </p>
+                </div>
+                <div className="relative px-6 pt-10 pb-6 bg-[var(--primary)] text-white text-center rounded-b-2xl">
+                  <div
+                    className="absolute left-1/2 top-0 w-14 h-14 rounded-full border-2 border-white overflow-hidden -translate-x-1/2 -translate-y-1/2 flex items-center justify-center text-white font-bold text-lg bg-slate-500"
+                    aria-hidden
+                  >
+                    {initials}
+                  </div>
+                  <p className="text-xs text-white/80 font-medium">
+                    {company}
+                  </p>
+                  <p className="text-base font-bold text-white mt-0.5">
+                    {author}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

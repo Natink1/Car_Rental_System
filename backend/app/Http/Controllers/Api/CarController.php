@@ -14,6 +14,8 @@ class CarController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Car::with(['owner:id,name,email', 'media'])
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
             ->where('status', 'approved');
 
         $q = $request->input('q');
@@ -59,6 +61,8 @@ class CarController extends Controller
     public function show(string $id): JsonResponse
     {
         $car = Car::with(['owner:id,name,email', 'media', 'reviews.user:id,name'])
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
             ->find($id);
 
         if (! $car) {
@@ -225,6 +229,8 @@ class CarController extends Controller
     public function myCars(): JsonResponse
     {
         $cars = Car::with(['media'])
+            ->withCount('reviews')
+            ->withAvg('reviews', 'rating')
             ->where('user_id', auth('api')->id())
             ->orderBy('created_at', 'desc')
             ->get()
@@ -239,6 +245,9 @@ class CarController extends Controller
         $images = $media->map(fn ($m) => MediaUrlHelper::fullUrl($m))->filter()->values()->all();
         $firstImage = MediaUrlHelper::fullUrl($media->first());
 
+        $reviewsCount = $car->reviews_count ?? ($car->relationLoaded('reviews') ? $car->reviews->count() : 0);
+        $avgRating = $car->reviews_avg_rating !== null ? (float) round($car->reviews_avg_rating, 1) : ($car->relationLoaded('reviews') && $car->reviews->isNotEmpty() ? (float) round($car->reviews->avg('rating'), 1) : 0);
+
         $data = [
             'id' => $car->id,
             'user_id' => $car->user_id,
@@ -252,6 +261,8 @@ class CarController extends Controller
             'status' => $car->status,
             'image' => $firstImage,
             'images' => $images,
+            'average_rating' => $avgRating,
+            'reviews_count' => $reviewsCount,
             'owner' => $car->relationLoaded('owner') ? $car->owner : null,
             'reviews' => $car->relationLoaded('reviews') ? $car->reviews : null,
             'created_at' => $car->created_at?->toIso8601String(),

@@ -59,6 +59,9 @@ export function OwnerDashboard() {
   const carsPending = data.cars_pending || [];
   const bookings = data.active_bookings || [];
   const pendingApprovalCount = bookings.filter((b) => b.status === 'pending').length;
+  const paidBookings = bookings.filter((b) => b.status === 'approved' && isPaid(b));
+  const unpaidBookings = bookings.filter((b) => b.status === 'approved' && !isPaid(b));
+  const pendingCarsCount = carsPending.filter((c) => c.status === 'pending').length;
   const rejectedCarsCount = (data.cars_pending || []).filter((c) => c.status === 'rejected').length;
 
   const refreshData = () => {
@@ -138,6 +141,29 @@ export function OwnerDashboard() {
         <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)' }}>{formatBirr(data.earnings || 0)}</p>
       </div>
 
+      <div className="grid" style={{ marginBottom: '2rem', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
+        <div className="card" style={{ padding: '1.25rem' }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Pending listings</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#c2410c' }}>{pendingCarsCount}</div>
+        </div>
+        <div className="card" style={{ padding: '1.25rem' }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Rejected listings</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#b91c1c' }}>{rejectedCarsCount}</div>
+        </div>
+        <div className="card" style={{ padding: '1.25rem' }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Needs approval</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#c2410c' }}>{pendingApprovalCount}</div>
+        </div>
+        <div className="card" style={{ padding: '1.25rem' }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Paid</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#065f46' }}>{paidBookings.length}</div>
+        </div>
+        <div className="card" style={{ padding: '1.25rem' }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Unpaid</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1d4ed8' }}>{unpaidBookings.length}</div>
+        </div>
+      </div>
+
       {rejectedCarsCount > 0 && (
         <div className="dashboard-alert dashboard-alert-rejected" style={{ marginBottom: '1.5rem' }}>
           <span className="dashboard-alert-text">
@@ -146,17 +172,14 @@ export function OwnerDashboard() {
         </div>
       )}
 
-      <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-        Active bookings (your cars)
-        {pendingApprovalCount > 0 && (
-          <span className="badge badge-pending" style={{ fontSize: '0.8rem' }}>
-            {pendingApprovalCount} need approval
-          </span>
+      <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Active bookings (your cars)</h2>
+
+      <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem', color: '#c2410c' }}>Needs approval</h3>
+      <div className="grid" style={{ marginBottom: '1.5rem' }}>
+        {bookings.filter((b) => b.status === 'pending').length === 0 && (
+          <p style={{ color: 'var(--text-muted)', margin: 0 }}>No bookings waiting for approval.</p>
         )}
-      </h2>
-      <div className="grid" style={{ marginBottom: '2rem' }}>
-        {bookings.length === 0 && <p style={{ color: 'var(--text-muted)' }}>No active bookings.</p>}
-        {bookings.map((b) => (
+        {bookings.filter((b) => b.status === 'pending').map((b) => (
           <div key={b.id} className="card" style={{ padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ width: 80, height: 56, background: '#e2e8f0', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
               {getImageUrl(b.car?.image) && <img src={getImageUrl(b.car.image)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
@@ -167,21 +190,54 @@ export function OwnerDashboard() {
                 {formatDisplayDate(b.start_date)} – {formatDisplayDate(b.end_date)} · {b.user?.name}
               </p>
             </div>
-            {b.status !== 'approved' && (
-              <span className={`badge ${b.status === 'pending' ? 'badge-pending' : 'badge-approved'}`}>{b.status}</span>
-            )}
-            {b.status === 'approved' && (
-              <span className={`badge ${isPaid(b) ? 'badge-approved' : ''}`} style={!isPaid(b) ? { background: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b' } : undefined}>
-                {isPaid(b) ? 'Paid' : 'Unpaid'}
-              </span>
-            )}
-            {isPaid(b) && <PaymentReceiptActions booking={b} />}
-            {b.status === 'pending' && (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button type="button" className="btn btn-primary" onClick={async () => { await bookingsApi.approve(b.id); refreshData(); window.dispatchEvent(new Event('admin-pending-changed')); }}>Approve</button>
-                <button type="button" className="btn btn-secondary" onClick={async () => { await bookingsApi.reject(b.id); refreshData(); }}>Reject</button>
-              </div>
-            )}
+            <span className="badge badge-pending">pending</span>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button type="button" className="btn btn-primary" onClick={async () => { await bookingsApi.approve(b.id); refreshData(); window.dispatchEvent(new Event('owner-pending-changed')); window.dispatchEvent(new Event('admin-pending-changed')); }}>Approve</button>
+              <button type="button" className="btn btn-secondary" onClick={async () => { await bookingsApi.reject(b.id); refreshData(); }}>Reject</button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem', color: '#1d4ed8' }}>Unpaid</h3>
+      <div className="grid" style={{ marginBottom: '1.5rem' }}>
+        {unpaidBookings.length === 0 && (
+          <p style={{ color: 'var(--text-muted)', margin: 0 }}>No unpaid bookings.</p>
+        )}
+        {unpaidBookings.map((b) => (
+          <div key={b.id} className="card" style={{ padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ width: 80, height: 56, background: '#e2e8f0', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+              {getImageUrl(b.car?.image) && <img src={getImageUrl(b.car.image)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+            </div>
+            <div style={{ flex: 1, minWidth: 150 }}>
+              <strong>{b.car?.brand} {b.car?.model}</strong>
+              <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                {formatDisplayDate(b.start_date)} – {formatDisplayDate(b.end_date)} · {b.user?.name}
+              </p>
+            </div>
+            <span className="badge badge-unpaid">Unpaid</span>
+          </div>
+        ))}
+      </div>
+
+      <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem', color: '#065f46' }}>Paid</h3>
+      <div className="grid" style={{ marginBottom: '2rem' }}>
+        {paidBookings.length === 0 && (
+          <p style={{ color: 'var(--text-muted)', margin: 0 }}>No paid bookings.</p>
+        )}
+        {paidBookings.map((b) => (
+          <div key={b.id} className="card" style={{ padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ width: 80, height: 56, background: '#e2e8f0', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+              {getImageUrl(b.car?.image) && <img src={getImageUrl(b.car.image)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+            </div>
+            <div style={{ flex: 1, minWidth: 150 }}>
+              <strong>{b.car?.brand} {b.car?.model}</strong>
+              <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                {formatDisplayDate(b.start_date)} – {formatDisplayDate(b.end_date)} · {b.user?.name}
+              </p>
+            </div>
+            <span className="badge badge-approved">Paid</span>
+            <PaymentReceiptActions booking={b} />
           </div>
         ))}
       </div>

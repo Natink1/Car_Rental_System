@@ -4,6 +4,7 @@ import * as carsApi from '../api/cars';
 import { getImageUrl } from '../utils/imageUrl';
 import { formatDisplayDate } from '../utils/dateFormat';
 import { formatBirr } from '../utils/currency';
+import { StarRating } from '../components/StarRating';
 
 const FILTER_KEYS = ['q', 'brand', 'min_price', 'max_price', 'transmission', 'fuel_type', 'seats'];
 const DEBOUNCE_MS = 350;
@@ -211,6 +212,9 @@ export function CarList() {
                 </div>
                 <div style={{ padding: '1rem' }}>
                   <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.125rem' }}>{car.brand} {car.model}</h3>
+                  <div style={{ marginBottom: '0.5rem' }}>
+                    <StarRating rating={car.average_rating} />
+                  </div>
                   <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.875rem' }}>{formatBirr(car.price_per_day)}/day</p>
                   {car.current_rental && (
                     <p style={{ margin: '0.5rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>

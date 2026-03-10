@@ -1,22 +1,19 @@
-import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import * as authApi from '../api/auth';
+import { useState } from "react";
+import { toast } from "react-toastify";
+import { useAuth } from "../contexts/AuthContext";
+import * as authApi from "../api/auth";
 
 export function ChangePasswordModal({ open, onClose }) {
   const { user } = useAuth();
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirmation, setPasswordConfirmation] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess(false);
     if (password !== passwordConfirmation) {
-      setError('New passwords do not match.');
+      toast.error("New passwords do not match.");
       return;
     }
     setLoading(true);
@@ -26,29 +23,27 @@ export function ChangePasswordModal({ open, onClose }) {
         password,
         password_confirmation: passwordConfirmation,
       });
-      setSuccess(true);
-      setCurrentPassword('');
-      setPassword('');
-      setPasswordConfirmation('');
+      toast.success("Password updated successfully.");
+      setCurrentPassword("");
+      setPassword("");
+      setPasswordConfirmation("");
       setTimeout(() => {
         onClose();
-      }, 1500);
+      }, 1000);
     } catch (err) {
       const msg = err.response?.data?.errors
-        ? Object.values(err.response.data.errors).flat().join(' ')
-        : err.response?.data?.message || 'Failed to change password.';
-      setError(msg);
+        ? Object.values(err.response.data.errors).flat().join(" ")
+        : err.response?.data?.message || "Failed to change password.";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
 
   const handleClose = () => {
-    setError('');
-    setSuccess(false);
-    setCurrentPassword('');
-    setPassword('');
-    setPasswordConfirmation('');
+    setCurrentPassword("");
+    setPassword("");
+    setPasswordConfirmation("");
     onClose();
   };
 
@@ -64,12 +59,18 @@ export function ChangePasswordModal({ open, onClose }) {
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
       <div className="card change-password-modal-card">
-        <h2 id="change-password-title" style={{ marginBottom: '0.5rem' }}>Change password</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1rem' }}>
+        <h2 id="change-password-title" style={{ marginBottom: "0.5rem" }}>
+          Change password
+        </h2>
+        <p
+          style={{
+            color: "var(--text-muted)",
+            fontSize: "0.875rem",
+            marginBottom: "1rem",
+          }}
+        >
           {user.email}
         </p>
-        {error && <p className="error-msg">{error}</p>}
-        {success && <p style={{ color: 'var(--primary)', marginBottom: '1rem' }}>Password updated successfully.</p>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Current password</label>
@@ -102,11 +103,26 @@ export function ChangePasswordModal({ open, onClose }) {
               autoComplete="new-password"
             />
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1rem' }}>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Updating…' : 'Update password'}
+          <div
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+              flexWrap: "wrap",
+              marginTop: "1rem",
+            }}
+          >
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading}
+            >
+              {loading ? "Updating…" : "Update password"}
             </button>
-            <button type="button" className="btn btn-secondary" onClick={handleClose}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleClose}
+            >
               Cancel
             </button>
           </div>
