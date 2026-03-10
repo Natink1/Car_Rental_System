@@ -44,5 +44,26 @@ class UserSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'customer',
         ]);
+
+        User::create([
+            'name' => 'Natanel Deribe',
+            'email' => 'nataneld@nhk.com',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
+        ]);
+
+        User::create([
+            'name' => 'kaleab Mulugeta',
+            'email' => 'kaleabm@nhk.com',
+            'password' => Hash::make('password'),
+            'role' => 'customer',
+        ]);
+
+        User::create([
+            'name' => 'Habtamu Girma',
+            'email' => 'habtamug@nhk.com',
+            'password' => Hash::make('password'),
+            'role' => 'owner',
+        ]);
     }
 }
