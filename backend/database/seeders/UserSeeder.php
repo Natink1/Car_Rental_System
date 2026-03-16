@@ -45,6 +45,14 @@ class UserSeeder extends Seeder
             'role' => 'customer',
         ]);
 
+
+        User::create([
+            'name' => 'Customer User 2',
+            'email' => 'customer2@nhk.com',
+            'password' => Hash::make('password'),
+            'role' => 'customer',
+        ]);
+
         User::create([
             'name' => 'Natanel Deribe',
             'email' => 'nataneld@nhk.com',
