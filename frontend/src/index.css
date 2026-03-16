@@ -218,7 +218,15 @@ input:focus, select:focus, textarea:focus {
   top: 0;
   z-index: 100;
   padding: 0.75rem 1rem;
-  background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 70%, transparent 100%);
+  background: transparent;
+}
+
+.navbar--overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: transparent;
 }
 
 .navbar-inner {
@@ -228,7 +236,8 @@ input:focus, select:focus, textarea:focus {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0.6rem 1.25rem;
-  background: var(--card-bg);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(12px);
   border-radius: var(--radius-lg);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
   border: 1px solid var(--border);
@@ -343,6 +352,11 @@ input:focus, select:focus, textarea:focus {
   padding: 0.5rem 1rem;
   border-radius: var(--radius);
   font-size: 0.9375rem;
+  color: white;
+}
+
+.navbar-links .btn-primary:hover {
+  color: white;
 }
 
 .navbar-links .btn-secondary {
@@ -449,6 +463,10 @@ input:focus, select:focus, textarea:focus {
   padding: 2rem 0;
 }
 
+.main--home {
+  padding-top: 0;
+}
+
 .footer {
   background: var(--primary-dark);
   color: #e2e8f0;
@@ -550,4 +568,3 @@ input:focus, select:focus, textarea:focus {
 .car-card:hover .car-card-cta {
   text-decoration: underline;
 }
-

@@ -37,14 +37,14 @@ export function HomePage() {
   const featuredForShow = featured.slice(0, 6);
 
   const heroBgStyle = {
-    backgroundImage: `linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 58, 138, 0.75) 50%, rgba(30, 64, 175, 0.9) 100%), url(${car1})`,
+    backgroundImage: `url(${car1})`,
   };
 
   return (
     <div>
       {/* Hero with background from assets (car1.jpeg) */}
       <section
-        className="min-h-[420px] flex items-center bg-cover bg-center text-white py-16 pb-20 text-center"
+        className="min-h-[420px] flex items-center bg-cover bg-center text-white pb-20 pt-32 text-center sm:pt-36"
         style={heroBgStyle}
       >
         <div className="w-full max-w-3xl mx-auto px-4">

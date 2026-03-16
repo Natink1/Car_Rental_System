@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import * as conversationsApi from "../api/conversations";
 import * as dashboardApi from "../api/dashboard";
@@ -8,6 +8,8 @@ import { ChangePasswordModal } from "./ChangePasswordModal";
 export function Navbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isHomePage = location.pathname === "/";
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingApprovals, setPendingApprovals] = useState(0);
   const [ownerPendingApprovals, setOwnerPendingApprovals] = useState(0);
@@ -158,7 +160,7 @@ export function Navbar() {
 
   return (
     <>
-      <header className="navbar">
+      <header className={`navbar${isHomePage ? " navbar--overlay" : ""}`}>
         <div className="container navbar-inner">
           <Link to="/" className="navbar-brand">
             <span className="navbar-brand-text">NHK Car-Rental</span>
