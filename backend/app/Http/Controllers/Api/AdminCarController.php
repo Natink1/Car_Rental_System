@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Helpers\MediaUrlHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Car;
+use App\Services\NotificationEmailService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class AdminCarController extends Controller
 {
@@ -18,6 +18,7 @@ class AdminCarController extends Controller
             ->get()
             ->map(function ($car) {
                 $media = $car->getMedia('car-images');
+
                 return [
                     'id' => $car->id,
                     'brand' => $car->brand,
@@ -55,6 +56,8 @@ class AdminCarController extends Controller
         }
 
         $car->update(['status' => 'approved']);
+        app(NotificationEmailService::class)->notifyOwnerCarApproved($car->fresh(['owner:id,name,email']));
+
         return response()->json(['message' => 'Car approved.', 'car' => $car->fresh()]);
     }
 
@@ -72,6 +75,7 @@ class AdminCarController extends Controller
         }
 
         $car->update(['status' => 'rejected']);
+
         return response()->json(['message' => 'Car rejected.', 'car' => $car->fresh()]);
     }
 }

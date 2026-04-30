@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Services\NotificationEmailService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -153,6 +154,7 @@ class PaymentController extends Controller
         }
 
         $payments = $booking->payments()->orderBy('created_at', 'desc')->get();
+
         return response()->json($payments);
     }
 
@@ -183,6 +185,8 @@ class PaymentController extends Controller
             'payment_status' => 'completed',
             'transaction_reference' => 'SIM-' . strtoupper(uniqid()),
         ]);
+
+        app(NotificationEmailService::class)->notifyBookingSuccessful($booking->fresh(['car.owner:id,name,email', 'user:id,name,email']));
 
         return response()->json([
             'message' => 'Payment simulated successfully.',
@@ -228,6 +232,7 @@ class PaymentController extends Controller
                 if ($receiptReference && $existing->transaction_reference !== $receiptReference) {
                     $existing->update(['transaction_reference' => $receiptReference]);
                 }
+
                 return response()->json([
                     'message' => 'Payment already recorded.',
                     'status' => 'success',
@@ -243,6 +248,7 @@ class PaymentController extends Controller
             ]);
 
             Cache::forget('chapa_tx_' . $txRef);
+            app(NotificationEmailService::class)->notifyBookingSuccessful($booking->fresh(['car.owner:id,name,email', 'user:id,name,email']));
 
             return response()->json([
                 'message' => 'Payment confirmed.',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Helpers\MediaUrlHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Car;
+use App\Services\NotificationEmailService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -21,12 +22,12 @@ class CarController extends Controller
         $q = $request->input('q');
         if ($q && is_string($q)) {
             $query->where(function ($qb) use ($q) {
-                $qb->where('brand', 'like', '%' . $q . '%')
-                    ->orWhere('model', 'like', '%' . $q . '%');
+                $qb->where('brand', 'like', '%'.$q.'%')
+                    ->orWhere('model', 'like', '%'.$q.'%');
             });
         }
         if ($request->filled('brand')) {
-            $query->where('brand', 'like', '%' . $request->brand . '%');
+            $query->where('brand', 'like', '%'.$request->brand.'%');
         }
         if ($request->filled('min_price')) {
             $query->where('price_per_day', '>=', $request->min_price);
@@ -46,6 +47,7 @@ class CarController extends Controller
         if ($request->has('featured') && $request->boolean('featured')) {
             $cars = $query->inRandomOrder()->limit(6)->get();
             $cars = $cars->map(fn ($car) => $this->formatCar($car));
+
             return response()->json($cars);
         }
 
@@ -81,6 +83,7 @@ class CarController extends Controller
         }
 
         $forOwner = $user && $car->user_id === $user->id;
+
         return response()->json($this->formatCar($car, $forOwner));
     }
 
@@ -129,6 +132,9 @@ class CarController extends Controller
         }
 
         $car->load(['owner:id,name,email', 'media']);
+        app(NotificationEmailService::class)->notifyAdminsCarNeedsApproval($car);
+        app(NotificationEmailService::class)->notifyOwnerCarPendingApproval($car);
+
         return response()->json($this->formatCar($car), 201);
     }
 
@@ -193,6 +199,7 @@ class CarController extends Controller
         }
 
         $car->load(['owner:id,name,email', 'media']);
+
         return response()->json($this->formatCar($car));
     }
 
@@ -208,6 +215,7 @@ class CarController extends Controller
         }
 
         $car->update(['status' => 'pending']);
+
         return response()->json(['message' => 'Listing resubmitted for approval.', 'car' => $car->fresh()]);
     }
 
@@ -223,6 +231,7 @@ class CarController extends Controller
         }
 
         $car->delete();
+
         return response()->json(['message' => 'Car deleted.']);
     }
 

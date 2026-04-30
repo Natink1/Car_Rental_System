@@ -6,6 +6,7 @@ use App\Helpers\MediaUrlHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Car;
+use App\Services\NotificationEmailService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class BookingController extends Controller
         $user = auth('api')->user();
 
         if ($user->isAdmin()) {
-            $query = Booking::with(['user:id,name,email', 'car.media', 'payments']);
+            $query = Booking::with(['user:id,name,email', 'car.media', 'car.owner:id,name,email', 'payments']);
         } elseif ($user->isOwner()) {
             $query = Booking::with(['user:id,name,email', 'car.media', 'payments'])
                 ->whereHas('car', fn ($q) => $q->where('user_id', $user->id));
@@ -84,7 +85,9 @@ class BookingController extends Controller
             'status' => 'pending',
         ]);
 
-        $booking->load(['car.media', 'user:id,name,email']);
+        $booking->load(['car.media', 'car.owner:id,name,email', 'user:id,name,email']);
+        app(NotificationEmailService::class)->notifyOwnerBookingNeedsApproval($booking);
+
         return response()->json($this->formatBooking($booking), 201);
     }
 
@@ -109,13 +112,14 @@ class BookingController extends Controller
 
     public function cancel(string $id): JsonResponse
     {
-        $booking = Booking::find($id);
+        $booking = Booking::with('car')->find($id);
         if (! $booking) {
             return response()->json(['message' => 'Booking not found'], 404);
         }
 
         $user = auth('api')->user();
-        $canCancel = $booking->user_id === $user->id
+        $canCancel = $user->isAdmin()
+            || $booking->user_id === $user->id
             || ($user->isOwner() && $booking->car->user_id === $user->id);
 
         if (! $canCancel) {
@@ -126,12 +130,13 @@ class BookingController extends Controller
         }
 
         $booking->update(['status' => 'cancelled']);
+
         return response()->json(['message' => 'Booking cancelled.', 'booking' => $this->formatBooking($booking->fresh(['car.media']))]);
     }
 
     public function approve(string $id): JsonResponse
     {
-        $booking = Booking::with('car')->find($id);
+        $booking = Booking::with(['car', 'user:id,name,email'])->find($id);
         if (! $booking) {
             return response()->json(['message' => 'Booking not found'], 404);
         }
@@ -153,6 +158,7 @@ class BookingController extends Controller
         $booking->update(['status' => 'approved']);
 
         // Payment is recorded when the customer completes payment via Chapa (PaymentController::chapaCallback).
+        app(NotificationEmailService::class)->notifyCustomerPaymentRequired($booking->fresh(['car', 'user:id,name,email']));
 
         return response()->json(['message' => 'Booking approved.', 'booking' => $this->formatBooking($booking->fresh(['car.media', 'payments']))]);
     }
@@ -176,6 +182,7 @@ class BookingController extends Controller
         }
 
         $booking->update(['status' => 'rejected']);
+
         return response()->json(['message' => 'Booking rejected.', 'booking' => $this->formatBooking($booking->fresh(['car.media']))]);
     }
 
