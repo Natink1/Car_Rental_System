@@ -17,3 +17,8 @@ export async function approve(id) {
 export async function reject(id) {
   await api.patch(`/bookings/${id}/reject`);
 }
+
+export async function cancel(id) {
+  const { data } = await api.patch(`/bookings/${id}/cancel`);
+  return data;
+}
