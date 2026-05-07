@@ -1,7 +1,7 @@
 import api from './axios';
 
-export async function list() {
-  const { data } = await api.get('/bookings');
+export async function list(params = {}) {
+  const { data } = await api.get('/bookings', { params });
   return data;
 }
 

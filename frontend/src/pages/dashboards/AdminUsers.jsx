@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import * as adminApi from "../../api/admin";
 import { getImageUrl } from "../../utils/imageUrl";
+import { useAuth } from "../../contexts/AuthContext";
 
 export function AdminUsers() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -20,6 +22,12 @@ export function AdminUsers() {
   const [createLoading, setCreateLoading] = useState(false);
   const [viewIdImageUser, setViewIdImageUser] = useState(null);
   const [detailUser, setDetailUser] = useState(null);
+  const [resetUser, setResetUser] = useState(null);
+  const [resetForm, setResetForm] = useState({
+    password: "",
+    password_confirmation: "",
+  });
+  const [resetLoading, setResetLoading] = useState(false);
 
   const fetchUsers = () => {
     return adminApi
@@ -88,6 +96,35 @@ export function AdminUsers() {
       toast.error(msg);
     } finally {
       setCreateLoading(false);
+    }
+  };
+
+  const openResetPassword = (targetUser) => {
+    setResetUser(targetUser);
+    setResetForm({ password: "", password_confirmation: "" });
+  };
+
+  const handleResetPasswordSubmit = async (e) => {
+    e.preventDefault();
+    if (!resetUser) return;
+    if (resetForm.password !== resetForm.password_confirmation) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      await adminApi.resetUserPassword(resetUser.id, resetForm);
+      toast.success(`Password reset for ${resetUser.name}.`);
+      setResetUser(null);
+      setResetForm({ password: "", password_confirmation: "" });
+    } catch (err) {
+      const msg = err.response?.data?.errors
+        ? Object.values(err.response.data.errors).flat().join(" ")
+        : err.response?.data?.message || "Failed to reset password.";
+      toast.error(msg);
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -336,17 +373,32 @@ export function AdminUsers() {
                     )}
                   </td>
                   <td style={{ padding: "0.75rem" }}>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      style={{
-                        fontSize: "0.875rem",
-                        padding: "0.35rem 0.75rem",
-                      }}
-                      onClick={() => setDetailUser(u)}
-                    >
-                      View details
-                    </button>
+                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        style={{
+                          fontSize: "0.875rem",
+                          padding: "0.35rem 0.75rem",
+                        }}
+                        onClick={() => setDetailUser(u)}
+                      >
+                        View details
+                      </button>
+                      {u.id !== currentUser?.id && (
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          style={{
+                            fontSize: "0.875rem",
+                            padding: "0.35rem 0.75rem",
+                          }}
+                          onClick={() => openResetPassword(u)}
+                        >
+                          Reset password
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -548,6 +600,81 @@ export function AdminUsers() {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {resetUser && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reset-password-modal-title"
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1002,
+            padding: "1rem",
+          }}
+          onClick={(e) => e.target === e.currentTarget && setResetUser(null)}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: "420px",
+              width: "100%",
+              overflow: "auto",
+              padding: "1.25rem",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3
+              id="reset-password-modal-title"
+              style={{ marginBottom: "0.35rem", fontSize: "1.25rem" }}
+            >
+              Reset password
+            </h3>
+            <p style={{ margin: "0 0 1rem", color: "var(--text-muted)" }}>
+              {resetUser.name} · {resetUser.email}
+            </p>
+            <form onSubmit={handleResetPasswordSubmit}>
+              <div className="form-group">
+                <label>New password</label>
+                <input
+                  type="password"
+                  value={resetForm.password}
+                  onChange={(e) => setResetForm((f) => ({ ...f, password: e.target.value }))}
+                  required
+                  minLength={8}
+                />
+              </div>
+              <div className="form-group">
+                <label>Confirm new password</label>
+                <input
+                  type="password"
+                  value={resetForm.password_confirmation}
+                  onChange={(e) => setResetForm((f) => ({ ...f, password_confirmation: e.target.value }))}
+                  required
+                  minLength={8}
+                />
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "1rem" }}>
+                <button type="submit" className="btn btn-primary" disabled={resetLoading}>
+                  {resetLoading ? "Resetting..." : "Reset password"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setResetUser(null)}
+                  disabled={resetLoading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

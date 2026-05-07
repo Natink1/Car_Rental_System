@@ -182,19 +182,22 @@ export function Navbar() {
                   )}
                 </Link>
                 {user?.role === "customer" && (
-                  <Link to="/customer/dashboard">
-                    Dashboard
-                    {customerPendingCount > 0 && (
-                      <span className="navbar-dashboard-badge navbar-badge-pending" aria-label={`${customerPendingCount} pending order${customerPendingCount > 1 ? "s" : ""}`}>
-                        {customerPendingCount}
-                      </span>
-                    )}
-                    {customerUnpaidCount > 0 && (
-                      <span className="navbar-dashboard-badge navbar-badge-unpaid" aria-label={`${customerUnpaidCount} unpaid`}>
-                        {customerUnpaidCount}
-                      </span>
-                    )}
-                  </Link>
+                  <>
+                    <Link to="/customer/dashboard">
+                      Dashboard
+                      {customerPendingCount > 0 && (
+                        <span className="navbar-dashboard-badge navbar-badge-pending" aria-label={`${customerPendingCount} pending order${customerPendingCount > 1 ? "s" : ""}`}>
+                          {customerPendingCount}
+                        </span>
+                      )}
+                      {customerUnpaidCount > 0 && (
+                        <span className="navbar-dashboard-badge navbar-badge-unpaid" aria-label={`${customerUnpaidCount} unpaid`}>
+                          {customerUnpaidCount}
+                        </span>
+                      )}
+                    </Link>
+                    <Link to="/bookings">Bookings</Link>
+                  </>
                 )}
                 {user?.role === "owner" && (
                   <>
@@ -216,6 +219,7 @@ export function Navbar() {
                         </span>
                       )}
                     </Link>
+                    <Link to="/bookings">Booking history</Link>
                     <Link to="/owner/cars/new">Add car</Link>
                   </>
                 )}

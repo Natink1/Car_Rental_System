@@ -127,6 +127,7 @@ export function OwnerDashboard() {
           <button type="button" className="btn btn-secondary" onClick={startChatWithAdmin}>Chat with Admin</button>
         )}
         <Link to="/owner/cars/new" className="btn btn-secondary">Add car</Link>
+        <Link to="/bookings" className="btn btn-secondary">Booking history</Link>
       </div>
 
       {deleteError && (
