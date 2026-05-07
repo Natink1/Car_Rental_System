@@ -20,11 +20,36 @@ class BookingController extends Controller
 
         if ($user->isAdmin()) {
             $query = Booking::with(['user:id,name,email', 'car.media', 'car.owner:id,name,email', 'payments']);
+            if ($request->filled('owner_id')) {
+                $ownerId = $request->query('owner_id');
+                $query->whereHas('car', fn ($q) => $q->where('user_id', $ownerId));
+            }
         } elseif ($user->isOwner()) {
             $query = Booking::with(['user:id,name,email', 'car.media', 'payments'])
                 ->whereHas('car', fn ($q) => $q->where('user_id', $user->id));
         } else {
             $query = Booking::with(['car.media', 'car.owner:id,name,email', 'payments'])->where('user_id', $user->id);
+        }
+
+        if ($request->filled('status') && $request->query('status') !== 'all') {
+            $query->where('status', $request->query('status'));
+        }
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->query('search'));
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('car', function ($carQuery) use ($search) {
+                    $carQuery->where('brand', 'like', "%{$search}%")
+                        ->orWhere('model', 'like', "%{$search}%")
+                        ->orWhereHas('owner', function ($ownerQuery) use ($search) {
+                            $ownerQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        });
+                })->orWhereHas('user', function ($userQuery) use ($search) {
+                    $userQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            });
         }
 
         $bookings = $query->orderBy('created_at', 'desc')->get()->map(fn ($b) => $this->formatBooking($b));
