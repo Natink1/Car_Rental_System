@@ -57,4 +57,31 @@ class AdminUserController extends Controller
             'user' => $user,
         ], 201);
     }
+
+    public function resetPassword(Request $request, string $id): JsonResponse
+    {
+        $admin = auth('api')->user();
+        if ($admin->id === $id) {
+            return response()->json(['message' => 'Use change password for your own account.'], 422);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $user = User::find($id);
+        if (! $user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return response()->json(['message' => 'Password reset successfully.']);
+    }
 }
