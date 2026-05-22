@@ -10,12 +10,22 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // User::create([
-        //     'name' => 'Admin User',
-        //     'email' => 'admin@nhk.com',
-        //     'password' => Hash::make('password'),
-        //     'role' => 'admin',
-        // ]);
+
+        User::create([
+            'name' => 'Admin User',
+            'email' => 'natink4825@gmail.com',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
+        ]);
+
+        User::create([
+            'name' => 'Kaleab User',
+            'email' => 'yenekal199@gmail.com',
+            'password' => Hash::make('password'),
+            'role' => 'owner',
+        ]);
+
+
 
         // User::create([
         //     'name' => 'Car Owner',
@@ -74,19 +84,19 @@ class UserSeeder extends Seeder
         //     'role' => 'owner',
         // ]);
 
-        User::create([
-            'name' => 'Natnael Customer',
-            'email' => 'natnael4825@gmail.com',
-            'password' => Hash::make('password'),
-            'role' => 'customer',
-        ]);
+        // User::create([
+        //     'name' => 'Natnael Customer',
+        //     'email' => 'natnael4825@gmail.com',
+        //     'password' => Hash::make('password'),
+        //     'role' => 'customer',
+        // ]);
 
-        User::create([
-            'name' => 'Natnael Owner User 2',
-            'email' => 'Natiman591591@gmail.com',
-            'password' => Hash::make('password'),
-            'role' => 'owner',
-        ]);
+        // User::create([
+        //     'name' => 'Natnael Owner User 2',
+        //     'email' => 'Natiman591591@gmail.com',
+        //     'password' => Hash::make('password'),
+        //     'role' => 'owner',
+        // ]);
 
     }
 }
