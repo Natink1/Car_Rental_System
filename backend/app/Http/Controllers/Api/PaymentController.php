@@ -14,10 +14,12 @@ use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
+    
     /**
      * Initialize a Chapa transaction for a booking. Returns checkout_url for redirect.
      * See https://developer.chapa.co/integrations/accept-payments
      */
+
     public function initializeChapa(Request $request, string $bookingId): JsonResponse
     {
         $booking = Booking::with('car')->find($bookingId);

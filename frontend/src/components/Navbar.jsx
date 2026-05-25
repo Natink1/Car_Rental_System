@@ -219,7 +219,7 @@ export function Navbar() {
                         </span>
                       )}
                     </Link>
-                    <Link to="/bookings">Booking history</Link>
+                    {/* booking history moved to sidebar; keep navbar cleaner */}
                     <Link to="/owner/cars/new">Add car</Link>
                   </>
                 )}

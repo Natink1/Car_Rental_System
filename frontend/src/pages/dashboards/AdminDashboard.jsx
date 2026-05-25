@@ -7,6 +7,10 @@ import { ConfirmModal } from '../../components/ConfirmModal';
 import { getImageUrl } from '../../utils/imageUrl';
 import { formatBirr } from '../../utils/currency';
 import { formatDisplayDate } from '../../utils/dateFormat';
+import { MultiLineChart, SimpleBarChart } from '../../components/Charts';
+import DashboardNav from '../../components/DashboardNav';
+import RecentBookings from '../../components/RecentBookings';
+import { formatDateOnly } from '../../utils/dateFormat';
 
 function bookingStatusClass(status) {
   if (status === 'pending') return 'badge-pending';
@@ -135,13 +139,120 @@ export function AdminDashboard() {
 
   if (loading) return <div className="page-loading"><div className="spinner" /></div>;
 
+  const totalsData = [
+    { name: 'Users', value: stats?.total_users ?? 0 },
+    { name: 'Cars', value: stats?.total_cars ?? 0 },
+    { name: 'Bookings', value: stats?.total_bookings ?? 0 },
+  ];
+
+  const approvalsData = [
+    { name: 'Approved', value: Math.max(0, (stats?.total_cars ?? 0) - (stats?.pending_approvals ?? 0)) },
+    { name: 'Pending', value: stats?.pending_approvals ?? 0 },
+  ];
+
+  // Revenue sparkline (last 14 days)
+  const makeDateRange = (days = 14) => {
+    const arr = [];
+    for (let i = days - 1; i >= 0; i -= 1) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      arr.push(`${yyyy}-${mm}-${dd}`);
+    }
+    return arr;
+  };
+
+  const revenueDates = makeDateRange(14);
+  const revenueMap = revenueDates.reduce((acc, date) => ({ ...acc, [date]: 0 }), {});
+
+  (bookings || []).forEach((b) => {
+    const payments = Array.isArray(b.payments) ? b.payments : [];
+    payments.forEach((p) => {
+      if (p.payment_status !== 'completed') return;
+      const dateKey = p.created_at ? formatDateOnly(p.created_at) : formatDateOnly(b.created_at);
+      if (dateKey in revenueMap) revenueMap[dateKey] += (p.amount || 0);
+    });
+  });
+
+  const revenueSeries = revenueDates.map((d) => ({ name: d, value: Math.round((revenueMap[d] || 0) * 100) / 100 }));
+
+  // Top cars by bookings
+  const carCounts = {};
+  (bookings || []).forEach((b) => {
+    const car = b.car;
+    if (!car) return;
+    const label = `${car.brand} ${car.model}`;
+    carCounts[label] = (carCounts[label] || 0) + 1;
+  });
+  const topCarsData = Object.entries(carCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 6);
+
+  // Monthly counts and revenue (last 12 months)
+  const makeMonthRange = (months = 12) => {
+    const arr = [];
+    const now = new Date();
+    for (let i = months - 1; i >= 0; i -= 1) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleString(undefined, { month: 'short', year: 'numeric' });
+      arr.push({ key, label });
+    }
+    return arr;
+  };
+
+  const months = makeMonthRange(12);
+  const countsMap = months.reduce((acc, m) => ({ ...acc, [m.key]: 0 }), {});
+  const revMap = months.reduce((acc, m) => ({ ...acc, [m.key]: 0 }), {});
+
+  (bookings || []).forEach((b) => {
+    const created = b.created_at ? new Date(b.created_at) : null;
+    if (created) {
+      const mkey = `${created.getFullYear()}-${String(created.getMonth() + 1).padStart(2, '0')}`;
+      if (mkey in countsMap) countsMap[mkey] += 1;
+    }
+
+    const payments = Array.isArray(b.payments) ? b.payments : [];
+    payments.forEach((p) => {
+      if (p.payment_status !== 'completed') return;
+      const d = p.created_at ? new Date(p.created_at) : (b.created_at ? new Date(b.created_at) : null);
+      if (!d) return;
+      const mkey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (mkey in revMap) revMap[mkey] += (p.amount || 0);
+    });
+  });
+
+  const monthlyData = months.map((m) => ({
+    label: m.label,
+    bookings: countsMap[m.key] || 0,
+    revenue: Math.round((revMap[m.key] || 0) * 100) / 100,
+  }));
+
   return (
     <div className="container">
-      <h1 className="section-title">Admin Dashboard</h1>
-      <div style={{ marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-        <Link to="/chat" className="btn btn-primary">Open Chat</Link>
-        <Link to="/admin/users" className="btn btn-secondary">Users</Link>
-      </div>
+      <div className="dashboard-shell">
+        <DashboardNav sections={[
+          { id: 'pending', label: 'Pending vehicles' },
+          { id: 'bookings', label: 'Bookings' },
+        ]} dashboardPath="/admin/dashboard" />
+        <div className="dashboard-content">
+          <h1 id="overview" className="section-title">Admin Dashboard</h1>
+          <div style={{ marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <Link to="/chat" className="btn btn-primary">Open Chat</Link>
+            <Link to="/admin/users" className="btn btn-secondary">Users</Link>
+          </div>
+
+          <div className="grid" style={{ marginBottom: '2rem', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
+            <MultiLineChart
+              title="Bookings (12 months)"
+              data={monthlyData}
+              series={[
+                { key: 'bookings', name: 'Bookings', color: '#1d4ed8', yAxisId: 'left' },
+              ]}
+              height={360}
+            />
+            <SimpleBarChart title="Top cars (by bookings)" data={topCarsData} />
+          </div>
 
       {(stats?.pending_approvals ?? 0) > 0 && (
         <div className="dashboard-alert dashboard-alert-pending" style={{ marginBottom: '1.5rem' }}>
@@ -174,7 +285,7 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Pending vehicles</h2>
+      <h2 id="pending" style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Pending vehicles</h2>
       <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Cars waiting for approval. Click &quot;View details&quot; to see full info and the owner who requested.</p>
       <div className="grid">
         {pendingCars.length === 0 && <p style={{ color: 'var(--text-muted)' }}>No pending vehicles.</p>}
@@ -201,7 +312,7 @@ export function AdminDashboard() {
         ))}
       </div>
 
-      <h2 style={{ fontSize: '1.25rem', margin: '2rem 0 1rem' }}>All bookings by owner</h2>
+      <h2 id="bookings" style={{ fontSize: '1.25rem', margin: '2rem 0 1rem' }}>All bookings by owner</h2>
       <div className="card" style={{ padding: '1rem', marginBottom: '1rem' }}>
         <div style={{ display: 'grid', gap: '0.75rem', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', alignItems: 'end' }}>
           <div className="form-group" style={{ margin: 0 }}>
@@ -334,6 +445,8 @@ export function AdminDashboard() {
         variant="danger"
         loading={cancelLoading}
       />
+        </div>
+      </div>
     </div>
   );
 }

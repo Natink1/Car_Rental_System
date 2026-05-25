@@ -25,8 +25,6 @@ class UserSeeder extends Seeder
             'role' => 'owner',
         ]);
 
-
-
         // User::create([
         //     'name' => 'Car Owner',
         //     'email' => 'owner@nhk.com',

@@ -9,7 +9,8 @@ import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { CarList } from "./pages/CarList";
 import { CarDetail } from "./pages/CarDetail";
-import { BookingList } from "./pages/BookingList";
+import BookingWrapper from './components/BookingWrapper';
+import OwnerLayout from './components/OwnerLayout';
 import { Chat } from "./pages/Chat";
 import { AddCar } from "./pages/AddCar";
 import { EditCar } from "./pages/EditCar";
@@ -18,6 +19,7 @@ import { OwnerDashboard } from "./pages/dashboards/OwnerDashboard";
 import { AdminDashboard } from "./pages/dashboards/AdminDashboard";
 import { AdminCarDetail } from "./pages/AdminCarDetail";
 import { AdminUsers } from "./pages/dashboards/AdminUsers";
+import OwnerListedCars from "./pages/dashboards/OwnerListedCars";
 
 function App() {
   return (
@@ -86,7 +88,7 @@ function App() {
             element={
               <Layout>
                 <ProtectedRoute allowedRoles={["customer", "owner"]}>
-                  <BookingList />
+                  <BookingWrapper />
                 </ProtectedRoute>
               </Layout>
             }
@@ -96,7 +98,9 @@ function App() {
             element={
               <Layout>
                 <ProtectedRoute allowedRoles={["owner"]}>
-                  <AddCar />
+                  <OwnerLayout>
+                    <AddCar />
+                  </OwnerLayout>
                 </ProtectedRoute>
               </Layout>
             }
@@ -106,7 +110,21 @@ function App() {
             element={
               <Layout>
                 <ProtectedRoute allowedRoles={["owner"]}>
-                  <EditCar />
+                  <OwnerLayout>
+                    <EditCar />
+                  </OwnerLayout>
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
+          <Route
+            path="/owner/listed"
+            element={
+              <Layout>
+                <ProtectedRoute allowedRoles={["owner"]}>
+                  <OwnerLayout>
+                    <OwnerListedCars />
+                  </OwnerLayout>
                 </ProtectedRoute>
               </Layout>
             }
