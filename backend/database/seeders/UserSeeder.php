@@ -25,6 +25,12 @@ class UserSeeder extends Seeder
             'role' => 'owner',
         ]);
 
+        User::create([
+            'name' => 'Habtamu User',
+            'email' => 'habtamugirma1oleo@gmail.com',
+            'password' => Hash::make('password'),
+            'role' => 'customer',
+        ]);
         // User::create([
         //     'name' => 'Car Owner',
         //     'email' => 'owner@nhk.com',
