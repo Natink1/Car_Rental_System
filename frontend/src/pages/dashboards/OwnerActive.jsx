@@ -8,11 +8,36 @@ export default function OwnerActive() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const refreshBookings = async () => {
+    try {
+      const d = await bookingsApi.list();
+      setBookings(Array.isArray(d) ? d : []);
+      window.dispatchEvent(new Event('owner-pending-changed'));
+    } catch (_) {
+      setBookings([]);
+    }
+  };
+
   useEffect(() => {
-    bookingsApi.list().then((d) => setBookings(Array.isArray(d) ? d : [])).catch(() => setBookings([])).finally(() => setLoading(false));
+    refreshBookings().finally(() => setLoading(false));
   }, []);
 
   const isPaid = (booking) => (booking.payments || []).some((p) => p.payment_status === 'completed');
+
+  const approveBooking = async (bookingId) => {
+    try {
+      await bookingsApi.approve(bookingId);
+      await refreshBookings();
+    } catch (_) {}
+  };
+
+  const rejectBooking = async (bookingId) => {
+    try {
+      await bookingsApi.reject(bookingId);
+      window.dispatchEvent(new Event('owner-rejected-changed'));
+      await refreshBookings();
+    } catch (_) {}
+  };
 
   if (loading) return <div className="page-loading"><div className="spinner" /></div>;
 
@@ -38,7 +63,15 @@ export default function OwnerActive() {
                 {formatDisplayDate(b.start_date)} – {formatDisplayDate(b.end_date)} · {b.user?.name}
               </p>
             </div>
-            <span className="badge badge-pending">pending</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginLeft: 'auto' }}>
+              <span className="badge badge-pending">pending</span>
+              <button type="button" className="btn btn-primary" onClick={() => approveBooking(b.id)}>
+                Approve
+              </button>
+              <button type="button" className="btn btn-secondary" onClick={() => rejectBooking(b.id)}>
+                Reject
+              </button>
+            </div>
           </div>
         ))}
       </div>

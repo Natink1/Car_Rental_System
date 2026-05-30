@@ -785,6 +785,29 @@ textarea:focus {
   color: var(--primary);
 }
 
+.dashboard-sidebar a,
+.dashboard-sidebar button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dashboard-nav-badge {
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  background: #c2410c;
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 .dashboard-sidebar a {
   display: block;
   width: 100%;

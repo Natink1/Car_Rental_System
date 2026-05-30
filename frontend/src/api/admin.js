@@ -10,6 +10,11 @@ export async function createUser(payload) {
   return data;
 }
 
+export async function updateUser(id, payload) {
+  const { data } = await api.patch(`/admin/users/${id}`, payload);
+  return data;
+}
+
 export async function resetUserPassword(id, payload) {
   const { data } = await api.patch(`/admin/users/${id}/password`, payload);
   return data;

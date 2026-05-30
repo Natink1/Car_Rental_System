@@ -74,5 +74,6 @@ Route::middleware(['auth:api', 'role:admin'])->group(function () {
     Route::patch('admin/cars/{id}/reject', [AdminCarController::class, 'reject']);
     Route::get('admin/users', [AdminUserController::class, 'index']);
     Route::post('admin/users', [AdminUserController::class, 'store']);
+    Route::patch('admin/users/{id}', [AdminUserController::class, 'update']);
     Route::patch('admin/users/{id}/password', [AdminUserController::class, 'resetPassword']);
 });

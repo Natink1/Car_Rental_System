@@ -58,6 +58,38 @@ class AdminUserController extends Controller
         ], 201);
     }
 
+    public function update(Request $request, string $id): JsonResponse
+    {
+        $user = User::find($id);
+
+        if (! $user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $rules = [
+            'name' => ['required', 'string', 'max:255'],
+            'phone' => [$user->role === 'admin' ? 'nullable' : 'required', 'string', 'max:30'],
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $user->update([
+            'name' => $request->name,
+            'phone' => $user->role === 'admin' ? null : $request->input('phone'),
+        ]);
+
+        $user->load('media');
+
+        return response()->json([
+            'message' => 'User updated successfully',
+            'user' => $user,
+        ]);
+    }
+
     public function resetPassword(Request $request, string $id): JsonResponse
     {
         $admin = auth('api')->user();

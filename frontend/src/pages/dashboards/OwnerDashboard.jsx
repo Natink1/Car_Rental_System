@@ -215,7 +215,7 @@ export function OwnerDashboard() {
       <div className="dashboard-shell">
         <DashboardNav sections={[
           { id: 'overview', label: 'Overview' },
-          { id: 'active', label: 'Active bookings', to: '/owner/active' },
+          { id: 'active', label: 'Active bookings', to: '/owner/active', badge: pendingApprovalCount },
           { id: 'listed', label: 'Listed cars', to: '/owner/listed' },
           { id: 'add-car', label: 'Add car', to: '/owner/cars/new' },
           { id: 'booking-history', label: 'Booking history', to: '/bookings' },

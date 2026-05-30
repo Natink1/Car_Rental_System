@@ -87,6 +87,9 @@ export default function DashboardNav({ sections = [], dashboardPath = '' }) {
               className={active === s.id ? 'active' : ''}
             >
               {s.label}
+              {typeof s.badge === 'number' && s.badge > 0 && (
+                <span className="dashboard-nav-badge">{s.badge > 99 ? '99+' : s.badge}</span>
+              )}
             </Link>
           ) : (
             <button
@@ -96,6 +99,9 @@ export default function DashboardNav({ sections = [], dashboardPath = '' }) {
               onClick={() => scrollTo(s.id)}
             >
               {s.label}
+              {typeof s.badge === 'number' && s.badge > 0 && (
+                <span className="dashboard-nav-badge">{s.badge > 99 ? '99+' : s.badge}</span>
+              )}
             </button>
           )
         ))}

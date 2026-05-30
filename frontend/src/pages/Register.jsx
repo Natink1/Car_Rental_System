@@ -3,6 +3,70 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../contexts/AuthContext";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const NAME_REGEX = /^[A-Za-z0-9][A-Za-z0-9\s.'-]{1,254}$/;
+const PASSWORD_HAS_LETTER = /[A-Za-z]/;
+const PASSWORD_HAS_NUMBER = /\d/;
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+
+function validateRegisterForm(values) {
+  const nextErrors = {};
+  const trimmedName = values.name.trim();
+  const trimmedEmail = values.email.trim();
+  const normalizedPhone = values.phone.trim();
+
+  if (!trimmedName) {
+    nextErrors.name = "Name is required.";
+  } else if (trimmedName.length < 2) {
+    nextErrors.name = "Name must be at least 2 characters.";
+  } else if (trimmedName.length > 255) {
+    nextErrors.name = "Name must be 255 characters or fewer.";
+  } else if (!NAME_REGEX.test(trimmedName)) {
+    nextErrors.name = "Name can only contain letters, numbers, spaces, apostrophes, periods, and hyphens.";
+  }
+
+  if (!trimmedEmail) {
+    nextErrors.email = "Email is required.";
+  } else if (!EMAIL_REGEX.test(trimmedEmail)) {
+    nextErrors.email = "Enter a valid email address.";
+  }
+
+  if (!normalizedPhone) {
+    nextErrors.phone = "Phone is required.";
+  } else {
+    const digits = normalizedPhone.replace(/\D/g, "");
+    if (digits.length < 7 || digits.length > 15) {
+      nextErrors.phone = "Phone number must contain 7 to 15 digits.";
+    }
+  }
+
+  if (!values.password) {
+    nextErrors.password = "Password is required.";
+  } else if (values.password.length < 8) {
+    nextErrors.password = "Password must be at least 8 characters.";
+  } else if (!PASSWORD_HAS_LETTER.test(values.password) || !PASSWORD_HAS_NUMBER.test(values.password)) {
+    nextErrors.password = "Password must include at least one letter and one number.";
+  }
+
+  if (!values.passwordConfirmation) {
+    nextErrors.passwordConfirmation = "Please confirm your password.";
+  } else if (values.password !== values.passwordConfirmation) {
+    nextErrors.passwordConfirmation = "Passwords do not match.";
+  }
+
+  if (values.role === "owner") {
+    if (!values.idImage) {
+      nextErrors.idImage = "ID image is required for owner accounts.";
+    } else if (!["image/jpeg", "image/png"].includes(values.idImage.type)) {
+      nextErrors.idImage = "Only JPG and PNG images are allowed.";
+    } else if (values.idImage.size > MAX_IMAGE_SIZE) {
+      nextErrors.idImage = "ID image must be 2MB or smaller.";
+    }
+  }
+
+  return nextErrors;
+}
+
 export function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -11,21 +75,29 @@ export function Register() {
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [role, setRole] = useState("customer");
   const [idImage, setIdImage] = useState(null);
+  const [errors, setErrors] = useState({});
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  const values = { name, email, phone, password, passwordConfirmation, role, idImage };
+
+  const setFieldError = (field, message) => {
+    setErrors((currentErrors) => {
+      const nextErrors = { ...currentErrors };
+      if (message) {
+        nextErrors[field] = message;
+      } else {
+        delete nextErrors[field];
+      }
+      return nextErrors;
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password !== passwordConfirmation) {
-      toast.error("Passwords do not match.");
-      return;
-    }
-    if (role === "owner" && !idImage) {
-      toast.error("Please upload an ID image to register as owner.");
-      return;
-    }
-    if (!phone.trim()) {
-      toast.error("Phone is required.");
+    const nextErrors = validateRegisterForm(values);
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
       return;
     }
     try {
@@ -55,6 +127,13 @@ export function Register() {
     }
   };
 
+  const renderError = (field) =>
+    errors[field] ? (
+      <p style={{ color: "#dc2626", fontSize: "0.875rem", margin: "0.35rem 0 0" }}>
+        {errors[field]}
+      </p>
+    ) : null;
+
   return (
     <div
       className="container"
@@ -68,36 +147,66 @@ export function Register() {
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setName(value);
+                setFieldError(
+                  "name",
+                  validateRegisterForm({ ...values, name: value }).name,
+                );
+              }}
               required
+              maxLength={255}
             />
+            {renderError("name")}
           </div>
           <div className="form-group">
             <label>Email</label>
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setEmail(value);
+                setFieldError(
+                  "email",
+                  validateRegisterForm({ ...values, email: value }).email,
+                );
+              }}
               required
             />
+            {renderError("email")}
           </div>
           <div className="form-group">
             <label>Phone</label>
             <input
               type="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setPhone(value);
+                setFieldError(
+                  "phone",
+                  validateRegisterForm({ ...values, phone: value }).phone,
+                );
+              }}
               placeholder="e.g. +1234567890"
               required
             />
+            {renderError("phone")}
           </div>
           <div className="form-group">
             <label>Role</label>
             <select
               value={role}
               onChange={(e) => {
-                setRole(e.target.value);
+                const value = e.target.value;
+                setRole(value);
                 setIdImage(null);
+                setFieldError(
+                  "idImage",
+                  validateRegisterForm({ ...values, role: value, idImage: null }).idImage,
+                );
               }}
             >
               <option value="customer">Customer</option>
@@ -110,9 +219,17 @@ export function Register() {
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/jpg"
-                onChange={(e) => setIdImage(e.target.files?.[0] ?? null)}
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  setIdImage(file);
+                  setFieldError(
+                    "idImage",
+                    validateRegisterForm({ ...values, idImage: file }).idImage,
+                  );
+                }}
                 required={role === "owner"}
               />
+              {renderError("idImage")}
               <p
                 style={{
                   fontSize: "0.875rem",
@@ -130,19 +247,37 @@ export function Register() {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setPassword(value);
+                const nextValidation = validateRegisterForm({
+                  ...values,
+                  password: value,
+                });
+                setFieldError("password", nextValidation.password);
+                setFieldError("passwordConfirmation", nextValidation.passwordConfirmation);
+              }}
               required
               minLength={8}
             />
+            {renderError("password")}
           </div>
           <div className="form-group">
             <label>Confirm password</label>
             <input
               type="password"
               value={passwordConfirmation}
-              onChange={(e) => setPasswordConfirmation(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setPasswordConfirmation(value);
+                setFieldError(
+                  "passwordConfirmation",
+                  validateRegisterForm({ ...values, passwordConfirmation: value }).passwordConfirmation,
+                );
+              }}
               required
             />
+            {renderError("passwordConfirmation")}
           </div>
           <button
             type="submit"

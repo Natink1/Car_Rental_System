@@ -48,6 +48,17 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('auth-logout', handleLogout);
   }, []);
 
+  useEffect(() => {
+    const handleUserUpdated = (event) => {
+      if (!event.detail) return;
+      setUser(event.detail);
+      localStorage.setItem('user', JSON.stringify(event.detail));
+    };
+
+    window.addEventListener('auth-user-updated', handleUserUpdated);
+    return () => window.removeEventListener('auth-user-updated', handleUserUpdated);
+  }, []);
+
   const login = async (email, password) => {
     const data = await authApi.login(email, password);
     setAuthToken(data.token);

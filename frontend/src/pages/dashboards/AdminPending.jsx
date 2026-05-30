@@ -4,10 +4,13 @@ import * as adminApi from '../../api/admin';
 import { getImageUrl } from '../../utils/imageUrl';
 import { formatBirr } from '../../utils/currency';
 import DashboardNav from '../../components/DashboardNav';
+import { ConfirmModal } from '../../components/ConfirmModal';
 
 export function AdminPending() {
   const [pendingCars, setPendingCars] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [approveCar, setApproveCar] = useState(null);
+  const [rejectCar, setRejectCar] = useState(null);
 
   const fetch = () => {
     adminApi.getCarsPending()
@@ -20,15 +23,21 @@ export function AdminPending() {
     fetch();
   }, []);
 
-  const handleApprove = async (id) => {
-    await adminApi.carApprove(id);
-    setPendingCars((prev) => prev.filter((c) => c.id !== id));
+  const handleApprove = async () => {
+    if (!approveCar?.id) return;
+
+    await adminApi.carApprove(approveCar.id);
+    setPendingCars((prev) => prev.filter((c) => c.id !== approveCar.id));
+    setApproveCar(null);
     window.dispatchEvent(new Event('admin-pending-changed'));
   };
 
-  const handleReject = async (id) => {
-    await adminApi.carReject(id);
-    setPendingCars((prev) => prev.filter((c) => c.id !== id));
+  const handleReject = async () => {
+    if (!rejectCar?.id) return;
+
+    await adminApi.carReject(rejectCar.id);
+    setPendingCars((prev) => prev.filter((c) => c.id !== rejectCar.id));
+    setRejectCar(null);
     window.dispatchEvent(new Event('admin-pending-changed'));
   };
 
@@ -64,12 +73,34 @@ export function AdminPending() {
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <Link to={`/admin/cars/${car.id}`} className="btn btn-secondary">View details</Link>
-                  <button type="button" className="btn btn-primary" onClick={() => handleApprove(car.id)}>Approve</button>
-                  <button type="button" className="btn btn-secondary" onClick={() => handleReject(car.id)}>Reject</button>
+                  <button type="button" className="btn btn-primary" onClick={() => setApproveCar(car)}>Approve</button>
+                  <button type="button" className="btn btn-secondary" onClick={() => setRejectCar(car)}>Reject</button>
                 </div>
               </div>
             ))}
           </div>
+
+          <ConfirmModal
+            open={!!approveCar}
+            onClose={() => setApproveCar(null)}
+            onConfirm={handleApprove}
+            title="Approve vehicle"
+            message={`Approve ${approveCar?.brand ?? 'this car'} ${approveCar?.model ?? ''}? This will make it visible to customers.`}
+            confirmLabel="Approve"
+            cancelLabel="Cancel"
+            variant="primary"
+          />
+
+          <ConfirmModal
+            open={!!rejectCar}
+            onClose={() => setRejectCar(null)}
+            onConfirm={handleReject}
+            title="Reject vehicle"
+            message={`Reject ${rejectCar?.brand ?? 'this car'} ${rejectCar?.model ?? ''}? The owner will need to make changes before resubmitting.`}
+            confirmLabel="Reject"
+            cancelLabel="Keep"
+            variant="danger"
+          />
         </div>
       </div>
     </div>

@@ -5,6 +5,42 @@ import * as adminApi from "../../api/admin";
 import { getImageUrl } from "../../utils/imageUrl";
 import { useAuth } from "../../contexts/AuthContext";
 
+const NAME_REGEX = /^[A-Za-z0-9][A-Za-z0-9\s.'-]{1,254}$/;
+
+function validateEditUserForm(values) {
+  const nextErrors = {};
+  const trimmedName = values.name.trim();
+  const trimmedPhone = values.phone.trim();
+
+  if (!trimmedName) {
+    nextErrors.name = "Name is required.";
+  } else if (trimmedName.length < 2) {
+    nextErrors.name = "Name must be at least 2 characters.";
+  } else if (trimmedName.length > 255) {
+    nextErrors.name = "Name must be 255 characters or fewer.";
+  } else if (!NAME_REGEX.test(trimmedName)) {
+    nextErrors.name = "Name can only contain letters, numbers, spaces, apostrophes, periods, and hyphens.";
+  }
+
+  if (values.role !== "admin") {
+    if (!trimmedPhone) {
+      nextErrors.phone = "Phone is required.";
+    } else {
+      const digits = trimmedPhone.replace(/\D/g, "");
+      if (digits.length < 7 || digits.length > 15) {
+        nextErrors.phone = "Phone number must contain 7 to 15 digits.";
+      }
+    }
+  } else if (trimmedPhone) {
+    const digits = trimmedPhone.replace(/\D/g, "");
+    if (digits.length < 7 || digits.length > 15) {
+      nextErrors.phone = "Phone number must contain 7 to 15 digits.";
+    }
+  }
+
+  return nextErrors;
+}
+
 export function AdminUsers() {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
@@ -28,6 +64,13 @@ export function AdminUsers() {
     password_confirmation: "",
   });
   const [resetLoading, setResetLoading] = useState(false);
+  const [editUser, setEditUser] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    phone: "",
+  });
+  const [editErrors, setEditErrors] = useState({});
+  const [editLoading, setEditLoading] = useState(false);
 
   const fetchUsers = () => {
     return adminApi
@@ -102,6 +145,56 @@ export function AdminUsers() {
   const openResetPassword = (targetUser) => {
     setResetUser(targetUser);
     setResetForm({ password: "", password_confirmation: "" });
+  };
+
+  const openEditUser = (targetUser) => {
+    setEditUser(targetUser);
+    setEditForm({
+      name: targetUser.name || "",
+      phone: targetUser.role === "admin" ? "" : targetUser.phone || "",
+    });
+    setEditErrors({});
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editUser) return;
+
+    const nextErrors = validateEditUserForm({
+      ...editForm,
+      role: editUser.role,
+    });
+    setEditErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    setEditLoading(true);
+    try {
+      const payload = {
+        name: editForm.name.trim(),
+        phone: editUser.role === "admin" ? null : editForm.phone.trim(),
+      };
+      const data = await adminApi.updateUser(editUser.id, payload);
+      const updatedUser = data.user || data;
+      setUsers((currentUsers) =>
+        currentUsers.map((user) => (user.id === updatedUser.id ? updatedUser : user)),
+      );
+      if (currentUser?.id === updatedUser.id) {
+        window.dispatchEvent(new CustomEvent("auth-user-updated", { detail: updatedUser }));
+      }
+      setEditUser(null);
+      setEditForm({ name: "", phone: "" });
+      setEditErrors({});
+      toast.success("User updated successfully.");
+    } catch (err) {
+      const msg = err.response?.data?.errors
+        ? Object.values(err.response.data.errors).flat().join(" ")
+        : err.response?.data?.message || "Failed to update user.";
+      toast.error(msg);
+    } finally {
+      setEditLoading(false);
+    }
   };
 
   const handleResetPasswordSubmit = async (e) => {
@@ -385,6 +478,17 @@ export function AdminUsers() {
                       >
                         View details
                       </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        style={{
+                          fontSize: "0.875rem",
+                          padding: "0.35rem 0.75rem",
+                        }}
+                        onClick={() => openEditUser(u)}
+                      >
+                        Edit user
+                      </button>
                       {u.id !== currentUser?.id && (
                         <button
                           type="button"
@@ -600,6 +704,125 @@ export function AdminUsers() {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {editUser && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-user-modal-title"
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1002,
+            padding: "1rem",
+          }}
+          onClick={(e) => e.target === e.currentTarget && setEditUser(null)}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: "460px",
+              width: "100%",
+              overflow: "auto",
+              padding: "1.25rem",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3
+              id="edit-user-modal-title"
+              style={{ marginBottom: "0.35rem", fontSize: "1.25rem" }}
+            >
+              Edit user
+            </h3>
+            <p style={{ margin: "0 0 1rem", color: "var(--text-muted)" }}>
+              {editUser.name} · {editUser.email}
+            </p>
+            <form onSubmit={handleEditSubmit}>
+              <div className="form-group">
+                <label>Name</label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setEditForm((form) => ({ ...form, name: value }));
+                    setEditErrors((currentErrors) => {
+                      const nextErrors = { ...currentErrors };
+                      const validation = validateEditUserForm({
+                        ...editForm,
+                        name: value,
+                        role: editUser.role,
+                      });
+                      if (validation.name) {
+                        nextErrors.name = validation.name;
+                      } else {
+                        delete nextErrors.name;
+                      }
+                      return nextErrors;
+                    });
+                  }}
+                  required
+                  maxLength={255}
+                />
+                {editErrors.name && (
+                  <p style={{ color: "#dc2626", fontSize: "0.875rem", margin: "0.35rem 0 0" }}>
+                    {editErrors.name}
+                  </p>
+                )}
+              </div>
+              <div className="form-group">
+                <label>Phone</label>
+                <input
+                  type="tel"
+                  value={editForm.phone}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setEditForm((form) => ({ ...form, phone: value }));
+                    setEditErrors((currentErrors) => {
+                      const nextErrors = { ...currentErrors };
+                      const validation = validateEditUserForm({
+                        ...editForm,
+                        phone: value,
+                        role: editUser.role,
+                      });
+                      if (validation.phone) {
+                        nextErrors.phone = validation.phone;
+                      } else {
+                        delete nextErrors.phone;
+                      }
+                      return nextErrors;
+                    });
+                  }}
+                  placeholder="e.g. +1234567890"
+                  required={editUser.role !== "admin"}
+                />
+                {editErrors.phone && (
+                  <p style={{ color: "#dc2626", fontSize: "0.875rem", margin: "0.35rem 0 0" }}>
+                    {editErrors.phone}
+                  </p>
+                )}
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "1rem" }}>
+                <button type="submit" className="btn btn-primary" disabled={editLoading}>
+                  {editLoading ? "Saving..." : "Save changes"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setEditUser(null)}
+                  disabled={editLoading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
