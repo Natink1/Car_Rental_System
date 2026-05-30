@@ -14,14 +14,16 @@ class DashboardController extends Controller
 {
     public function admin(): JsonResponse
     {
-        $totalUsers = User::count();
+        $totalOwners = User::where('role', 'owner')->count();
+        $totalCustomers = User::where('role', 'customer')->count();
         $totalCars = Car::count();
         $pendingCars = Car::where('status', 'pending')->count();
         $totalBookings = Booking::count();
         $totalRevenue = Payment::where('payment_status', 'completed')->sum('amount');
 
         return response()->json([
-            'total_users' => $totalUsers,
+            'total_owners' => $totalOwners,
+            'total_customers' => $totalCustomers,
             'total_cars' => $totalCars,
             'pending_approvals' => $pendingCars,
             'total_bookings' => $totalBookings,
