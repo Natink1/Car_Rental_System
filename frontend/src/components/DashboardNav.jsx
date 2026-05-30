@@ -64,12 +64,12 @@ export default function DashboardNav({ sections = [], dashboardPath = '' }) {
     if (dashboardPath) {
       const target = `${dashboardPath}#${id}`;
       navigate(target);
-      setActive(id);
-      // try scrolling again shortly after navigation
+      // try scrolling again shortly after navigation and then set active
       setTimeout(() => {
         const el2 = document.getElementById(id);
         if (el2) el2.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 200);
+        setActive(id);
+      }, 300);
       return;
     }
 

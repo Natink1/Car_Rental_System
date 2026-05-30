@@ -214,19 +214,37 @@ export function OwnerDashboard() {
     <div className="container">
       <div className="dashboard-shell">
         <DashboardNav sections={[
-          { id: 'active', label: 'Active bookings' },
+          { id: 'overview', label: 'Overview' },
+          { id: 'active', label: 'Active bookings', to: '/owner/active' },
           { id: 'listed', label: 'Listed cars', to: '/owner/listed' },
           { id: 'add-car', label: 'Add car', to: '/owner/cars/new' },
           { id: 'booking-history', label: 'Booking history', to: '/bookings' },
-        ]} />
+        ]} dashboardPath="/owner/dashboard" />
         <div className="dashboard-content">
           <h1 id="overview" className="section-title">Owner Dashboard</h1>
+          <div className="grid" style={{ marginBottom: '1.5rem', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+            <div className="card" style={{ padding: '1rem', background: 'rgba(29,78,216,0.06)', color: '#1d4ed8' }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Listed cars</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{carsApproved.length}</div>
+            </div>
+            <div className="card" style={{ padding: '1rem', background: 'rgba(220,38,38,0.06)', color: '#b91c1c' }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Rejected listings</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{rejectedCarsCount}</div>
+            </div>
+            <div className="card" style={{ padding: '1rem', background: 'rgba(124,58,237,0.06)', color: '#7c3aed' }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Total bookings</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{ownerBookings.length}</div>
+            </div>
+            <div className="card" style={{ padding: '1rem', background: 'rgba(6,95,70,0.06)', color: '#065f46' }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Current bookings</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{bookings.length}</div>
+            </div>
+          </div>
           <div style={{ marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             <Link to="/chat" className="btn btn-primary">Open Chat</Link>
             {admins[0] && (
               <button type="button" className="btn btn-secondary" onClick={startChatWithAdmin}>Chat with Admin</button>
             )}
-            <Link to="/owner/cars/new" className="btn btn-secondary">Add car</Link>
             <Link to="/bookings" className="btn btn-secondary">Booking history</Link>
           </div>
 
@@ -254,80 +272,7 @@ export function OwnerDashboard() {
             <SimpleBarChart title="Top cars" data={topCarsData} />
           </div>
 
-          {/* Active bookings moved here (after charts) */}
-          <h2 id="active" style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Active bookings (your cars)</h2>
-
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem', color: '#c2410c' }}>Needs approval</h3>
-          <div className="grid" style={{ marginBottom: '1.5rem' }}>
-            {bookings.filter((b) => b.status === 'pending').length === 0 && (
-              <p style={{ color: 'var(--text-muted)', margin: 0 }}>No bookings waiting for approval.</p>
-            )}
-            {bookings.filter((b) => b.status === 'pending').map((b) => (
-              <div key={b.id} className="card" style={{ padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <div style={{ width: 80, height: 56, background: '#e2e8f0', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
-                  {getImageUrl(b.car?.image) && <img src={getImageUrl(b.car.image)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
-                </div>
-                <div style={{ flex: 1, minWidth: 150 }}>
-                  <strong>{b.car?.brand} {b.car?.model}</strong>
-                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                    {formatDisplayDate(b.start_date)} – {formatDisplayDate(b.end_date)} · {b.user?.name}
-                  </p>
-                </div>
-                <span className="badge badge-pending">pending</span>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button type="button" className="btn btn-primary" onClick={async () => { await bookingsApi.approve(b.id); refreshData(); window.dispatchEvent(new Event('owner-pending-changed')); window.dispatchEvent(new Event('admin-pending-changed')); }}>Approve</button>
-                  <button type="button" className="btn btn-secondary" onClick={async () => { await bookingsApi.reject(b.id); refreshData(); }}>Reject</button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem', color: '#1d4ed8' }}>Unpaid</h3>
-          <div className="grid" style={{ marginBottom: '1.5rem' }}>
-            {unpaidBookings.length === 0 && (
-              <p style={{ color: 'var(--text-muted)', margin: 0 }}>No unpaid bookings.</p>
-            )}
-            {unpaidBookings.map((b) => (
-              <div key={b.id} className="card" style={{ padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <div style={{ width: 80, height: 56, background: '#e2e8f0', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
-                  {getImageUrl(b.car?.image) && <img src={getImageUrl(b.car.image)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
-                </div>
-                <div style={{ flex: 1, minWidth: 150 }}>
-                  <strong>{b.car?.brand} {b.car?.model}</strong>
-                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                    {formatDisplayDate(b.start_date)} – {formatDisplayDate(b.end_date)} · {b.user?.name}
-                  </p>
-                </div>
-                <span className="badge badge-unpaid">Unpaid</span>
-              </div>
-            ))}
-          </div>
-
-          <h3 style={{ fontSize: '1.1rem', marginBottom: '0.75rem', color: '#065f46' }}>Paid</h3>
-          <div className="grid" style={{ marginBottom: '2rem' }}>
-            {paidBookings.length === 0 && (
-              <p style={{ color: 'var(--text-muted)', margin: 0 }}>No paid bookings.</p>
-            )}
-            {paidBookings.map((b) => (
-              <div key={b.id} className="card" style={{ padding: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <div style={{ width: 80, height: 56, background: '#e2e8f0', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
-                  {getImageUrl(b.car?.image) && <img src={getImageUrl(b.car.image)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
-                </div>
-                <div style={{ flex: 1, minWidth: 150 }}>
-                  <strong>{b.car?.brand} {b.car?.model}</strong>
-                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                    {formatDisplayDate(b.start_date)} – {formatDisplayDate(b.end_date)} · {b.user?.name}
-                  </p>
-                </div>
-                <span className="badge badge-approved">Paid</span>
-                <PaymentReceiptActions booking={b} />
-              </div>
-            ))}
-          </div>
-
-          <div style={{ marginBottom: '2rem' }}>
-            <RecentBookings title="Recent bookings" bookings={ownerBookings.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))} limit={6} />
-          </div>
+          {/* Active bookings moved to their own page */}
 
           <div className="grid" style={{ marginBottom: '2rem', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
             <div className="card" style={{ padding: '1.25rem' }}>

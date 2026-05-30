@@ -16,9 +16,12 @@ import { AddCar } from "./pages/AddCar";
 import { EditCar } from "./pages/EditCar";
 import { CustomerDashboard } from "./pages/dashboards/CustomerDashboard";
 import { OwnerDashboard } from "./pages/dashboards/OwnerDashboard";
+import OwnerActive from "./pages/dashboards/OwnerActive";
 import { AdminDashboard } from "./pages/dashboards/AdminDashboard";
 import { AdminCarDetail } from "./pages/AdminCarDetail";
 import { AdminUsers } from "./pages/dashboards/AdminUsers";
+import AdminPending from "./pages/dashboards/AdminPending";
+import AdminBookings from "./pages/dashboards/AdminBookings";
 import OwnerListedCars from "./pages/dashboards/OwnerListedCars";
 
 function App() {
@@ -150,6 +153,18 @@ function App() {
             }
           />
           <Route
+            path="/owner/active"
+            element={
+              <Layout>
+                <ProtectedRoute allowedRoles={["owner"]}>
+                  <OwnerLayout>
+                    <OwnerActive />
+                  </OwnerLayout>
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
+          <Route
             path="/admin/dashboard"
             element={
               <Layout>
@@ -165,6 +180,26 @@ function App() {
               <Layout>
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminCarDetail />
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
+          <Route
+            path="/admin/pending"
+            element={
+              <Layout>
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminPending />
+                </ProtectedRoute>
+              </Layout>
+            }
+          />
+          <Route
+            path="/admin/bookings"
+            element={
+              <Layout>
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminBookings />
                 </ProtectedRoute>
               </Layout>
             }

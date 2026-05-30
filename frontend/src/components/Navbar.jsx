@@ -196,7 +196,6 @@ export function Navbar() {
                         </span>
                       )}
                     </Link>
-                    <Link to="/bookings">Bookings</Link>
                   </>
                 )}
                 {user?.role === "owner" && (
@@ -220,7 +219,6 @@ export function Navbar() {
                       )}
                     </Link>
                     {/* booking history moved to sidebar; keep navbar cleaner */}
-                    <Link to="/owner/cars/new">Add car</Link>
                   </>
                 )}
                 {user?.role === "admin" && (
