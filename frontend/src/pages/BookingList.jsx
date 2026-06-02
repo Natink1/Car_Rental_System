@@ -421,14 +421,15 @@ export function BookingList({ embedded = false }) {
                       Pay now
                     </button>
                   )}
-                  {!hasCompletedPayment(b) && (b.status === 'pending' || b.status === 'approved') && (
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => setCancelBooking(b)}>
-                      Cancel booking
-                    </button>
-                  )}
+                  {!hasCompletedPayment(b) &&
+                    (b.status === "pending" || b.status === "approved") && (
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => setCancelBooking(b)}>
+                        Cancel booking
+                      </button>
+                    )}
                   {hasCompletedPayment(b) && (
                     <PaymentReceiptActions booking={b} />
                   )}
@@ -464,7 +465,9 @@ export function BookingList({ embedded = false }) {
             setCancelBooking(null);
           } catch (err) {
             // minimal feedback
-            window.alert(err?.response?.data?.message || 'Could not cancel booking.');
+            window.alert(
+              err?.response?.data?.message || "Could not cancel booking.",
+            );
           } finally {
             setCancelLoading(false);
           }

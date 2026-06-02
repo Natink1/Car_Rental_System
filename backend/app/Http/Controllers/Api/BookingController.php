@@ -22,11 +22,11 @@ class BookingController extends Controller
             $query = Booking::with(['user:id,name,email', 'car.media', 'car.owner:id,name,email', 'payments']);
             if ($request->filled('owner_id')) {
                 $ownerId = $request->query('owner_id');
-                $query->whereHas('car', fn ($q) => $q->where('user_id', $ownerId));
+                $query->whereHas('car', fn($q) => $q->where('user_id', $ownerId));
             }
         } elseif ($user->isOwner()) {
             $query = Booking::with(['user:id,name,email', 'car.media', 'payments'])
-                ->whereHas('car', fn ($q) => $q->where('user_id', $user->id));
+                ->whereHas('car', fn($q) => $q->where('user_id', $user->id));
         } else {
             $query = Booking::with(['car.media', 'car.owner:id,name,email', 'payments'])->where('user_id', $user->id);
         }
@@ -52,7 +52,7 @@ class BookingController extends Controller
             });
         }
 
-        $bookings = $query->orderBy('created_at', 'desc')->get()->map(fn ($b) => $this->formatBooking($b));
+        $bookings = $query->orderBy('created_at', 'desc')->get()->map(fn($b) => $this->formatBooking($b));
 
         return response()->json($bookings);
     }
@@ -87,7 +87,7 @@ class BookingController extends Controller
             ->where(function ($q) use ($start, $end) {
                 $q->whereBetween('start_date', [$start, $end])
                     ->orWhereBetween('end_date', [$start, $end])
-                    ->orWhere(fn ($q2) => $q2->where('start_date', '<=', $start)->where('end_date', '>=', $end));
+                    ->orWhere(fn($q2) => $q2->where('start_date', '<=', $start)->where('end_date', '>=', $end));
             })
             ->exists();
 

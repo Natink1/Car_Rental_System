@@ -20,7 +20,7 @@ class NotificationEmailService
             'New car listing needs approval',
             'Hello Admin,',
             [
-                $this->carLabel($car).' was submitted for approval.',
+                $this->carLabel($car) . ' was submitted for approval.',
                 'Please review the pending approval list in the admin dashboard.',
             ],
         ));
@@ -36,9 +36,9 @@ class NotificationEmailService
 
         $this->sendToUser($car->owner, new CarRentalEmailNotification(
             'Your car listing is pending approval',
-            'Hello '.$car->owner->name.',',
+            'Hello ' . $car->owner->name . ',',
             [
-                $this->carLabel($car).' has been submitted successfully.',
+                $this->carLabel($car) . ' has been submitted successfully.',
                 'Your listing is pending admin approval before customers can book it.',
             ],
         ));
@@ -54,9 +54,9 @@ class NotificationEmailService
 
         $this->sendToUser($car->owner, new CarRentalEmailNotification(
             'Your car listing is approved',
-            'Hello '.$car->owner->name.',',
+            'Hello ' . $car->owner->name . ',',
             [
-                $this->carLabel($car).' has been approved and is now listed for customers.',
+                $this->carLabel($car) . ' has been approved and is now listed for customers.',
                 'Customers can now view and book this car.',
             ],
         ));
@@ -72,10 +72,10 @@ class NotificationEmailService
 
         $this->sendToUser($booking->car->owner, new CarRentalEmailNotification(
             'Booking request pending approval',
-            'Hello '.$booking->car->owner->name.',',
+            'Hello ' . $booking->car->owner->name . ',',
             [
-                ($booking->user?->name ?? 'A customer').' requested to book '.$this->carLabel($booking->car).'.',
-                'Rental dates: '.$this->bookingDateRange($booking).'.',
+                ($booking->user?->name ?? 'A customer') . ' requested to book ' . $this->carLabel($booking->car) . '.',
+                'Rental dates: ' . $this->bookingDateRange($booking) . '.',
                 'Please approve or reject this request from your owner dashboard.',
             ],
         ));
@@ -90,12 +90,12 @@ class NotificationEmailService
 
         $this->sendToUser($booking->user, new CarRentalEmailNotification(
             'Payment required for your booking',
-            'Hello '.$booking->user->name.',',
+            'Hello ' . $booking->user->name . ',',
             [
-                'Your booking for '.$this->carLabel($booking->car).' has been approved.',
+                'Your booking for ' . $this->carLabel($booking->car) . ' has been approved.',
                 'Please complete payment to confirm the booking.',
-                'Rental duration: '.$this->bookingDaysLabel($booking),
-                'Amount due: '.number_format((float) $booking->total_price, 2).' ETB.',
+                'Rental duration: ' . $this->bookingDaysLabel($booking),
+                'Amount due: ' . number_format((float) $booking->total_price, 2) . ' ETB.',
             ],
         ));
     }
@@ -110,11 +110,11 @@ class NotificationEmailService
         if ($customer) {
             $this->sendToUser($customer, new CarRentalEmailNotification(
                 'Booking successful',
-                'Hello '.$customer->name.',',
+                'Hello ' . $customer->name . ',',
                 [
-                    'Your booking for '.$this->carLabel($booking->car).' is successful.',
-                    'Rental dates: '.$this->bookingDateRange($booking).'.',
-                    'Rental duration: '.$this->bookingDaysLabel($booking),
+                    'Your booking for ' . $this->carLabel($booking->car) . ' is successful.',
+                    'Rental dates: ' . $this->bookingDateRange($booking) . '.',
+                    'Rental duration: ' . $this->bookingDaysLabel($booking),
                 ],
             ));
         }
@@ -122,10 +122,10 @@ class NotificationEmailService
         if ($owner) {
             $this->sendToUser($owner, new CarRentalEmailNotification(
                 'Booking successful',
-                'Hello '.$owner->name.',',
+                'Hello ' . $owner->name . ',',
                 [
-                    ($customer?->name ?? 'A customer').' completed payment for '.$this->carLabel($booking->car).'.',
-                    'Rental dates: '.$this->bookingDateRange($booking).'.',
+                    ($customer?->name ?? 'A customer') . ' completed payment for ' . $this->carLabel($booking->car) . '.',
+                    'Rental dates: ' . $this->bookingDateRange($booking) . '.',
                 ],
             ));
         }
@@ -169,12 +169,12 @@ class NotificationEmailService
             return 'the car';
         }
 
-        return trim($car->year.' '.$car->brand.' '.$car->model);
+        return trim($car->year . ' ' . $car->brand . ' ' . $car->model);
     }
 
     private function bookingDateRange(Booking $booking): string
     {
-        return $booking->start_date?->format('Y-m-d').' to '.$booking->end_date?->format('Y-m-d');
+        return $booking->start_date?->format('Y-m-d') . ' to ' . $booking->end_date?->format('Y-m-d');
     }
 
     private function bookingDays(Booking $booking): int
@@ -196,6 +196,6 @@ class NotificationEmailService
             return 'N/A';
         }
 
-        return $days.' day'.($days === 1 ? '' : 's');
+        return $days . ' day' . ($days === 1 ? '' : 's');
     }
 }
