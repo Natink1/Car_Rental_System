@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import * as bookingsApi from "../../api/bookings";
 import * as dashboardApi from "../../api/dashboard";
 import * as paymentsApi from "../../api/payments";
+import { ConfirmModal } from "../../components/ConfirmModal";
 import { formatDisplayDate } from "../../utils/dateFormat";
 import { formatBirr } from "../../utils/currency";
 import { getImageUrl } from "../../utils/imageUrl";
@@ -21,6 +23,8 @@ export function CustomerDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [paymentBooking, setPaymentBooking] = useState(null);
+  const [cancelBooking, setCancelBooking] = useState(null);
+  const [cancelLoading, setCancelLoading] = useState(false);
   const [filters, setFilters] = useState({
     search: "",
     status: "all",
@@ -118,6 +122,10 @@ export function CustomerDashboard() {
     return payments.some((p) => p.payment_status === "completed");
   };
 
+  const canCancelBooking = (booking) =>
+    !hasCompletedPayment(booking) &&
+    (booking.status === "pending" || booking.status === "approved");
+
   const bookings = useMemo(() => {
     const combined = [...active, ...history];
 
@@ -163,17 +171,6 @@ export function CustomerDashboard() {
   return (
     <div className="container">
       <h1 className="section-title">Customer Dashboard</h1>
-      <div
-        style={{
-          marginBottom: "1.5rem",
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "0.5rem",
-        }}>
-        <Link to="/chat" className="btn btn-primary">
-          Open Chat
-        </Link>
-      </div>
 
       <div
         className="card"
@@ -352,6 +349,14 @@ export function CustomerDashboard() {
                   </button>
                 </>
               )}
+              {canCancelBooking(b) && (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setCancelBooking(b)}>
+                  Cancel booking
+                </button>
+              )}
               {hasCompletedPayment(b) && <PaymentReceiptActions booking={b} />}
             </div>
           </div>
@@ -367,6 +372,26 @@ export function CustomerDashboard() {
           setPaymentBooking(null);
           refresh();
           window.dispatchEvent(new Event("customer-pending-changed"));
+        }}
+      />
+      <ConfirmModal
+        open={!!cancelBooking}
+        onClose={() => setCancelBooking(null)}
+        title="Cancel booking"
+        message="Are you sure you want to cancel this booking?"
+        confirmLabel="Cancel booking"
+        variant="danger"
+        loading={cancelLoading}
+        onConfirm={async () => {
+          if (!cancelBooking) return;
+          try {
+            setCancelLoading(true);
+            await bookingsApi.cancel(cancelBooking.id);
+            setCancelBooking(null);
+            refresh();
+          } finally {
+            setCancelLoading(false);
+          }
         }}
       />
     </div>
