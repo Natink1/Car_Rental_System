@@ -421,7 +421,7 @@ export function BookingList({ embedded = false }) {
                       Pay now
                     </button>
                   )}
-                  {(b.status === 'pending' || (b.status === 'approved' && !hasCompletedPayment(b))) && (
+                  {!hasCompletedPayment(b) && (b.status === 'pending' || b.status === 'approved') && (
                     <button
                       type="button"
                       className="btn btn-secondary"
