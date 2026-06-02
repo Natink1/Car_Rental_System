@@ -113,9 +113,7 @@ export function CustomerDashboard() {
       <h1 className="section-title">Customer Dashboard</h1>
       <div style={{ marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
         <Link to="/chat" className="btn btn-primary">Open Chat</Link>
-        {admins[0] && (
-          <button type="button" className="btn btn-secondary" onClick={startChatWithAdmin}>Chat with Admin</button>
-        )}
+        {/* Chat with Admin removed for customers */}
         <Link to="/bookings" className="btn btn-secondary">My Bookings</Link>
       </div>
 
