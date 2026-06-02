@@ -154,6 +154,11 @@ class BookingController extends Controller
             return response()->json(['message' => 'Booking cannot be cancelled.'], 422);
         }
 
+        $hasCompletedPayment = $booking->payments()->where('payment_status', 'completed')->exists();
+        if ($hasCompletedPayment) {
+            return response()->json(['message' => 'Booking has completed payment and cannot be cancelled.'], 422);
+        }
+
         $booking->update(['status' => 'cancelled']);
 
         return response()->json(['message' => 'Booking cancelled.', 'booking' => $this->formatBooking($booking->fresh(['car.media']))]);

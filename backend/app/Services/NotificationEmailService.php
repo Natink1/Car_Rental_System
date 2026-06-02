@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\CarRentalEmailNotification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Carbon\Carbon;
 
 class NotificationEmailService
 {
@@ -79,7 +80,6 @@ class NotificationEmailService
             ],
         ));
     }
-
     public function notifyCustomerPaymentRequired(Booking $booking): void
     {
         $booking->loadMissing(['car', 'user']);
@@ -94,6 +94,7 @@ class NotificationEmailService
             [
                 'Your booking for '.$this->carLabel($booking->car).' has been approved.',
                 'Please complete payment to confirm the booking.',
+                'Rental duration: '.$this->bookingDaysLabel($booking),
                 'Amount due: '.number_format((float) $booking->total_price, 2).' ETB.',
             ],
         ));
@@ -113,6 +114,7 @@ class NotificationEmailService
                 [
                     'Your booking for '.$this->carLabel($booking->car).' is successful.',
                     'Rental dates: '.$this->bookingDateRange($booking).'.',
+                    'Rental duration: '.$this->bookingDaysLabel($booking),
                 ],
             ));
         }
@@ -173,5 +175,27 @@ class NotificationEmailService
     private function bookingDateRange(Booking $booking): string
     {
         return $booking->start_date?->format('Y-m-d').' to '.$booking->end_date?->format('Y-m-d');
+    }
+
+    private function bookingDays(Booking $booking): int
+    {
+        if (! $booking->start_date || ! $booking->end_date) {
+            return 0;
+        }
+
+        $start = $booking->start_date instanceof Carbon ? $booking->start_date : Carbon::parse($booking->start_date);
+        $end = $booking->end_date instanceof Carbon ? $booking->end_date : Carbon::parse($booking->end_date);
+
+        return $start->diffInDays($end) + 1;
+    }
+
+    private function bookingDaysLabel(Booking $booking): string
+    {
+        $days = $this->bookingDays($booking);
+        if ($days <= 0) {
+            return 'N/A';
+        }
+
+        return $days.' day'.($days === 1 ? '' : 's');
     }
 }

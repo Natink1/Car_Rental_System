@@ -14,8 +14,11 @@ use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
-    
+
     /**
+     *  *
+     * Nati Chapa
+     *
      * Initialize a Chapa transaction for a booking. Returns checkout_url for redirect.
      * See https://developer.chapa.co/integrations/accept-payments
      */
@@ -90,9 +93,14 @@ class PaymentController extends Controller
     }
 
     /**
+     *
+     * Nati Chapa
+     *
      * Chapa callback: GET with trx_ref, ref_id, status. Verify with Chapa then record payment.
      * See https://developer.chapa.co/integrations/verify-payments
      */
+
+
     public function chapaCallback(Request $request): JsonResponse
     {
         $txRef = $request->query('trx_ref') ?? $request->query('tx_ref');
